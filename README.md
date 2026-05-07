@@ -46,9 +46,41 @@ srhc-platform/
 3. **Chạy Backend**:
    ```bash
    cd backend
-   npm install
    npm run start:dev
    ```
+
+4. **Chạy Mobile App (Expo)**:
+   ```bash
+   cd apps/mobile
+   npm start
+   ```
+
+5. **Chạy Web Portal (Next.js)**:
+   ```bash
+   cd apps/web-portal
+   npm run dev
+   ```
+
+## 🗄 Cơ sở dữ liệu & Tài khoản mẫu
+
+### Sơ đồ Thực thể (Entities)
+Hệ thống sử dụng PostgreSQL với các module chính:
+- **Users**: Quản lý tài khoản, vai trò và thông tin cá nhân.
+- **Patients**: Quản lý bệnh nhân và hồ sơ sức khỏe.
+- **Healthcare**: Quản lý bác sĩ, chuyên khoa và cơ sở y tế.
+- **IoT**: Quản lý thiết bị và chỉ số sức khỏe thời gian thực.
+- **Clinical**: Quản lý lịch hẹn, hội chẩn và đơn thuốc.
+
+### Danh sách tài khoản mẫu (Seed Data)
+Tất cả tài khoản đều sử dụng mật khẩu chung: **`123456`**
+
+| Vai trò | Email | Mô tả |
+| :--- | :--- | :--- |
+| **Admin** | `admin@srhc.vn` | Quản trị viên toàn hệ thống |
+| **Doctor** | `doctor@srhc.vn` | Bác sĩ chuyên khoa |
+| **Citizen** | `citizen@srhc.vn` | Người dân / Bệnh nhân |
+| **Health Worker** | `health_worker@srhc.vn` | Cán bộ y tế cơ sở |
+| **Health Manager** | `health_manager@srhc.vn` | Quản lý y tế khu vực |
 
 ---
 *Dự án thuộc sứ mệnh chuyển đổi số quốc gia trong lĩnh vực y tế tại Việt Nam.*
