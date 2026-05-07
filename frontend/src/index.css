@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader", ui-serif, Georgia, serif;
+
+  --color-primary: #00482f;
+  --color-secondary: #006241;
+  --color-house-green: #1E3932;
+  --color-green-light: #d4e9e2;
+  --color-neutral-warm: #f2f0eb;
+  --color-starbucks-green: #006241;
+}
+
+@layer base {
+  body {
+    @apply bg-neutral-warm text-house-green font-sans;
+  }
+}
+
+.card-shadow {
+  box-shadow: 0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24);
+}
+
+.frap-shadow {
+  box-shadow: 0 0 0.5px rgba(0,0,0,0.14), 0 12px 24px rgba(0,117,74,0.3);
+}

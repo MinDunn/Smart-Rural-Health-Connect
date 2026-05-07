@@ -9,6 +9,7 @@ import { HealthcareModule } from './modules/healthcare/healthcare.module';
 import { IotModule } from './modules/iot/iot.module';
 import { ClinicalModule } from './modules/clinical/clinical.module';
 import { SystemModule } from './modules/system/system.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { SystemModule } from './modules/system/system.module';
     IotModule,
     ClinicalModule,
     SystemModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

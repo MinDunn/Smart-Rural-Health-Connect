@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Database chính (PostgreSQL)
+  postgres:
+    image: postgres:15-alpine
+    container_name: srhc-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: srhc_user
+      POSTGRES_PASSWORD: srhc_password
+      POSTGRES_DB: srhc_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Cache & Pub/Sub (Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: srhc-redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # MQTT Broker cho IoT (EMQX)
+  emqx:
+    image: emqx/emqx:5.1.0
+    container_name: srhc-emqx
+    restart: always
+    ports:
+      - "1883:1883"
+      - "8083:8083"
+      - "18083:18083"
+    environment:
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: "srhc_admin_password"
+
+  # Backend Service
+  backend:
+    build: ./backend
+    container_name: srhc-backend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=srhc_user
+      - DB_PASSWORD=srhc_password
+      - DB_NAME=srhc_db
+      - PORT=3001
+      - NODE_ENV=development
+    depends_on:
+      - postgres
+      - redis
+
+  # Frontend Service
+  frontend:
+    build: ./frontend
+    container_name: srhc-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
