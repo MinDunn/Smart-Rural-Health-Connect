@@ -8,12 +8,19 @@ const api = axios.create({
 
 // Add interceptor for token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('srhc_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+export const authApi = {
+  login: (data: any) => api.post('/auth/login', data),
+  register: (data: any) => api.post('/auth/register', data),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (data: any) => api.post('/auth/reset-password', data),
+};
 
 export const patientApi = {
   getProfile: (userId: string) => api.get(`/patients/${userId}`),

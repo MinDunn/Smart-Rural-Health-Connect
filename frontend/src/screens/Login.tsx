@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import AuthLayout from '../components/auth/AuthLayout';
 import { Screen } from '../types';
+import { authApi } from '../lib/api';
 
 interface LoginProps {
   onLogin: (data: any) => void;
@@ -14,6 +15,25 @@ const LoginScreen = ({ onLogin, setScreen }: LoginProps) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    // Check if there's a token in the URL (from Google Login)
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const userEncoded = urlParams.get('user');
+    
+    if (token && userEncoded) {
+      try {
+        const userData = JSON.parse(atob(userEncoded));
+        // Clear the URL parameters immediately
+        window.history.replaceState({}, document.title, window.location.pathname);
+        onLogin({ access_token: token, user: userData });
+      } catch (e) {
+        console.error('Error decoding google user:', e);
+      }
+    }
+  }, [onLogin]);
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -24,19 +44,14 @@ const LoginScreen = ({ onLogin, setScreen }: LoginProps) => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:3001/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        onLogin(data);
-      } else {
-        setError(data.message || 'Đăng nhập thất bại');
-      }
-    } catch (err) {
-      setError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại backend.');
+      const response = await authApi.login({ email, password });
+      
+      setSuccess(true);
+      setTimeout(() => {
+        onLogin(response.data);
+      }, 1000);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Đăng nhập thất bại. Kiểm tra lại thông tin.');
     } finally {
       setLoading(false);
     }
@@ -53,6 +68,17 @@ const LoginScreen = ({ onLogin, setScreen }: LoginProps) => {
           >
             <AlertCircle size={14} />
             {error}
+          </motion.div>
+        )}
+
+        {success && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-3 bg-green-50 text-green-600 text-xs font-bold rounded-xl border border-green-100 flex items-center gap-2"
+          >
+            <CheckCircle2 size={14} />
+            Đăng nhập thành công! Đang vào hệ thống...
           </motion.div>
         )}
         <div>
@@ -89,6 +115,23 @@ const LoginScreen = ({ onLogin, setScreen }: LoginProps) => {
           className="w-full bg-starbucks-green text-white py-4 rounded-3xl font-bold hover:shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all mt-4 disabled:opacity-50"
         >
           {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+        </button>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-gray-400 font-bold">Hoặc</span>
+          </div>
+        </div>
+
+        <button 
+          onClick={() => window.location.href = 'http://localhost:3001/auth/google'}
+          className="w-full bg-white border-2 border-gray-100 text-gray-700 py-4 rounded-3xl font-bold flex items-center justify-center gap-3 hover:bg-gray-50 active:scale-95 transition-all"
+        >
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+          Tiếp tục với Google
         </button>
         <div className="text-center mt-6">
           <span className="text-gray-400 text-sm">Chưa có tài khoản? </span>
