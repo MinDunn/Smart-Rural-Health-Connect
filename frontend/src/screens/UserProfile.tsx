@@ -13,6 +13,25 @@ interface UserProfileProps {
 const UserProfileScreen = ({ profile, setProfile }: UserProfileProps) => {
   const years = Array.from({ length: 2026 - 1940 }, (_, i) => (1940 + i).toString()).reverse();
 
+  const handleSave = async () => {
+    try {
+      const savedUser = localStorage.getItem('srhc_user');
+      if (!savedUser) return;
+      const user = JSON.parse(savedUser);
+      
+      const { patientApi } = await import('../lib/api');
+      await patientApi.updateProfile(user.id, {
+        bloodType: profile.bloodType,
+        medicalHistory: profile.conditions.join(', '),
+        allergies: profile.allergies,
+      });
+      alert('Đã lưu thông tin y tế thành công!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Có lỗi xảy ra khi lưu thông tin.');
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }} 
@@ -135,7 +154,7 @@ const UserProfileScreen = ({ profile, setProfile }: UserProfileProps) => {
       <div className="flex flex-col md:flex-row gap-4 pt-8">
         <button 
           className="flex-grow bg-starbucks-green text-white py-5 rounded-3xl font-extrabold text-lg shadow-xl shadow-green-900/20 active:scale-95 transition-all"
-          onClick={() => alert('Đã lưu thông tin!')}
+          onClick={handleSave}
         >
           LƯU THÔNG TIN
         </button>

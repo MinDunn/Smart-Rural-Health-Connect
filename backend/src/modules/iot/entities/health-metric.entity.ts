@@ -33,6 +33,12 @@ export class HealthMetric {
   @Column({ nullable: true })
   unit: string;
 
+  @Column({ default: 'stable' })
+  status: string; // stable, warning, critical
+
+  @Column({ default: true })
+  isStable: boolean;
+
   @CreateDateColumn()
   @Index()
   timestamp: Date;

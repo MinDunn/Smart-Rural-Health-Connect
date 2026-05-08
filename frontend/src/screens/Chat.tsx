@@ -10,9 +10,7 @@ interface ChatProps {
 
 const ChatScreen = ({ setScreen }: ChatProps) => {
   const [messages, setMessages] = useState([
-    { role: 'bot', text: 'Chào bạn! Tôi là trợ lý ảo của Sức Khỏe Việt. Bạn đang cảm thấy như thế nào hôm nay? Hãy cho tôi biết triệu chứng hoặc thắc mắc của bạn.', time: '10:00 AM' },
-    { role: 'user', text: 'Tôi bị đau đầu âm ỉ khoảng 2 ngày nay kèm theo chóng mặt nhẹ.', time: '10:02 AM' },
-    { role: 'bot', text: 'Đau đầu kèm chóng mặt có thể do nhiều nguyên nhân như thiếu ngủ, căng thẳng hoặc vấn đề huyết áp. Bạn có bị sốt hay buồn nôn không?', time: '10:03 AM' },
+    { role: 'bot', text: 'Chào bạn! Tôi là trợ lý ảo của Sức Khỏe Việt. Bạn đang cảm thấy như thế nào hôm nay? Hãy cho tôi biết triệu chứng hoặc thắc mắc của bạn.', time: 'Mới' },
   ]);
 
   return (

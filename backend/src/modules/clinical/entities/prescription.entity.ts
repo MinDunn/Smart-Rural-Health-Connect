@@ -17,8 +17,8 @@ export class Prescription {
   @JoinColumn({ name: 'consultation_id' })
   consultation: Consultation;
 
-  @Column({ type: 'text' })
-  medicines: string; // List of medicines and instructions
+  @Column({ type: 'jsonb' })
+  medicines: any; // List of medicines and instructions
 
   @Column({ nullable: true })
   duration: string;

@@ -24,4 +24,15 @@ export class UsersService {
       relations: ['role', 'profile'],
     });
   }
+
+  async updateProfile(id: string, profileData: any): Promise<User> {
+    const user = await this.findById(id);
+    if (!user) throw new Error('User not found');
+    if (!user.profile) {
+      user.profile = profileData;
+    } else {
+      Object.assign(user.profile, profileData);
+    }
+    return this.userRepository.save(user);
+  }
 }

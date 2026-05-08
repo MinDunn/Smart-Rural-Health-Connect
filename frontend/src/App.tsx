@@ -24,44 +24,37 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeScreen, setScreen] = useState<Screen>('home');
   const [user, setUser] = useState<any>(null);
+  const [patientId, setPatientId] = useState<string | null>(null);
 
   // Profile State
   const [profile, setProfile] = useState<Profile>({
-    name: 'Nguyễn Văn A',
-    birthYear: '1960',
-    gender: 'Nam',
-    phone: '0912 345 678',
-    relativePhone: '0988 777 666',
-    conditions: ['Cao huyết áp'],
+    name: '',
+    birthYear: '',
+    gender: '',
+    phone: '',
+    relativePhone: '',
+    conditions: ['Không có'],
     allergies: '',
-    bloodType: 'O',
-    height: 165,
-    weight: 68,
-    bp: '120/80',
-    sugar: '5.6',
-    hr: '72',
-    spo2: '98',
-    lastMeasured: 'Hôm nay'
+    bloodType: 'Không rõ',
+    height: 0,
+    weight: 0,
+    bp: '--/--',
+    sugar: '--',
+    hr: '--',
+    spo2: '--',
+    lastMeasured: 'Chưa có dữ liệu'
   });
 
   // Medical History State
-  const [medicalHistory, setMedicalHistory] = useState<HistoryItem[]>([
-    { date: '12', month: 'Tháng 03', year: '2026', title: 'Kiểm tra sức khỏe tổng quát', hospital: 'Trạm y tế Phường', doctor: 'BS. Lê Mạnh Hùng', result: 'Theo dõi chỉ số huyết áp tại nhà.' },
-    { date: '15', month: 'Tháng 10', year: '2025', title: 'Xét nghiệm đường huyết định kỳ', hospital: 'Bệnh viện Đa khoa Tâm Anh', doctor: 'BS. Nguyễn Thị Kim', result: 'Đường huyết ổn định, duy trì chế độ ăn.' },
-    { date: '02', month: 'Tháng 08', year: '2025', title: 'Khám chuyên khoa Nội tiết', hospital: 'Phòng khám Đa khoa Hồng Ngọc', doctor: 'BS. Trần Văn Tú', result: 'Kết quả bình thường, tái khám sau 6 tháng.' }
-  ]);
+  const [medicalHistory, setMedicalHistory] = useState<HistoryItem[]>([]);
 
   // Prescription State
   const [prescription, setPrescription] = useState<Prescription>({
-    id: 'DT-2026-0312',
-    title: 'Duy trì huyết áp',
-    date: '12/03/2026',
-    doctor: 'BS. Hùng',
-    medications: [
-      { name: 'Amlodipine 5mg', timing: 'Sáng', dosage: '1 viên' },
-      { name: 'Metformin 500mg', timing: 'Tối', dosage: '1 viên' },
-      { name: 'Vitamin B Complex', timing: 'Trưa', dosage: '1 viên' }
-    ]
+    id: '',
+    title: 'Chưa có đơn thuốc',
+    date: '--/--/----',
+    doctor: '--',
+    medications: []
   });
 
   // Check for token on load
@@ -87,12 +80,107 @@ export default function App() {
     }
   }, []);
 
-  const addHistory = (item: HistoryItem) => {
-    setMedicalHistory([item, ...medicalHistory]);
+  // Fetch data from API
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      const fetchData = async () => {
+        try {
+          // Fetch Patient/Profile
+          const patientRes = await import('./lib/api').then(m => m.patientApi.getProfile(user.id));
+          const patientData = patientRes.data;
+          
+          if (patientData) {
+            setPatientId(patientData.id);
+            setProfile(prev => ({
+              ...prev,
+              bloodType: patientData.bloodType || prev.bloodType,
+              allergies: patientData.allergies || prev.allergies,
+              conditions: patientData.medicalHistory ? [patientData.medicalHistory] : prev.conditions,
+            }));
+
+            // Fetch History
+            const historyRes = await import('./lib/api').then(m => m.clinicalApi.getHistory(patientData.id));
+            const formattedHistory = historyRes.data.map((item: any) => ({
+              date: new Date(item.appointmentDate).getDate().toString(),
+              month: `Tháng ${new Date(item.appointmentDate).getMonth() + 1}`,
+              year: new Date(item.appointmentDate).getFullYear().toString(),
+              title: item.reason || 'Khám bệnh',
+              hospital: 'Trạm y tế',
+              doctor: item.doctor?.user?.profile ? `${item.doctor.user.profile.lastName} ${item.doctor.user.profile.firstName}` : 'Bác sĩ',
+              result: item.consultation?.diagnosis || 'Chưa có kết luận'
+            }));
+            setMedicalHistory(formattedHistory);
+
+            // Fetch Latest Prescription
+            const prescriptionRes = await import('./lib/api').then(m => m.clinicalApi.getLatestPrescription(patientData.id));
+            if (prescriptionRes.data) {
+              const p = prescriptionRes.data;
+              setPrescription({
+                id: p.id,
+                title: 'Đơn thuốc gần nhất',
+                date: new Date(p.createdAt).toLocaleDateString('vi-VN'),
+                doctor: 'Bác sĩ điều trị',
+                medications: p.medicines || []
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+      fetchData();
+    }
+  }, [isLoggedIn, user]);
+
+  const addHistory = async (item: HistoryItem) => {
+    if (!patientId) return;
+    try {
+      const { clinicalApi } = await import('./lib/api');
+      // 1. Create Appointment
+      const apptRes = await clinicalApi.createAppointment({
+        patient: { id: patientId },
+        appointmentDate: new Date(`${item.year}-${item.month.replace('Tháng ', '')}-${item.date}`),
+        reason: item.title,
+        status: 'completed'
+      });
+      
+      // 2. Create Consultation
+      await clinicalApi.addConsultation(apptRes.data.id, {
+        diagnosis: item.result,
+        doctorNotes: `Bác sĩ: ${item.doctor}, Bệnh viện: ${item.hospital}`
+      });
+
+      // Refresh list
+      setMedicalHistory([item, ...medicalHistory]);
+      alert('Đã lưu lịch sử khám thành công!');
+    } catch (error) {
+      console.error('Error adding history:', error);
+      alert('Có lỗi xảy ra khi lưu lịch sử khám.');
+    }
   };
 
-  const updatePrescription = (data: Prescription) => {
-    setPrescription(data);
+  const updatePrescription = async (data: Prescription) => {
+    if (!patientId) return;
+    try {
+      const { clinicalApi } = await import('./lib/api');
+      // Usually we need a consultationId. For simplicity, we'll assume we update for the latest appointment
+      const historyRes = await clinicalApi.getHistory(patientId);
+      const latestAppt = historyRes.data[0];
+      
+      if (latestAppt && latestAppt.consultation) {
+        await clinicalApi.addPrescription(latestAppt.consultation.id, {
+          medicines: data.medications,
+          duration: '7 days' // Default
+        });
+        setPrescription(data);
+        alert('Đã cập nhật đơn thuốc thành công!');
+      } else {
+        alert('Cần có lịch sử khám trước khi thêm đơn thuốc.');
+      }
+    } catch (error) {
+      console.error('Error updating prescription:', error);
+      alert('Có lỗi xảy ra khi cập nhật đơn thuốc.');
+    }
   };
 
   const bmi = useMemo(() => {
@@ -186,7 +274,13 @@ export default function App() {
           )}
           {activeScreen === 'status' && (
             <motion.div key="status" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <StatusScreen profile={profile} setProfile={setProfile} bmi={bmi} bmiStatus={bmiStatus} />
+              <StatusScreen 
+                profile={profile} 
+                setProfile={setProfile} 
+                bmi={bmi} 
+                bmiStatus={bmiStatus}
+                patientId={patientId}
+              />
             </motion.div>
           )}
           {activeScreen === 'medical-records' && (
@@ -196,6 +290,7 @@ export default function App() {
                 onAddHistory={addHistory}
                 prescription={prescription}
                 onUpdatePrescription={updatePrescription}
+                patientId={patientId}
               />
             </motion.div>
           )}

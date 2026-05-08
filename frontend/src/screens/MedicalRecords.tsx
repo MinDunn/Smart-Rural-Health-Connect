@@ -8,13 +8,15 @@ interface MedicalRecordsProps {
   onAddHistory: (item: HistoryItem) => void;
   prescription: Prescription;
   onUpdatePrescription: (data: Prescription) => void;
+  patientId: string | null;
 }
 
 const MedicalRecordsScreen = ({ 
   history, 
   onAddHistory, 
   prescription, 
-  onUpdatePrescription 
+  onUpdatePrescription,
+  patientId 
 }: MedicalRecordsProps) => {
   const [showHistoryForm, setShowHistoryForm] = useState(false);
   const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
