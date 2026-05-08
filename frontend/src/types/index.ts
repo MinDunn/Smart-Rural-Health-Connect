@@ -5,7 +5,9 @@ export interface Profile {
   birthYear: string;
   gender: string;
   phone: string;
-  relativePhone: string;
+  address: string;
+  emergencyContacts: { name: string; relationship: string; phone: string; address: string }[];
+  relativePhone: string; // Keep for backward compatibility if needed, but we'll use emergencyContacts
   conditions: string[];
   allergies: string;
   bloodType: string;

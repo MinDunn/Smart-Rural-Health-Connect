@@ -27,6 +27,9 @@ export class Patient {
   @Column({ type: 'text', nullable: true })
   allergies: string;
 
+  @Column({ type: 'json', nullable: true })
+  emergencyContacts: { name: string; relationship: string; phone: string }[];
+
   @OneToMany(() => HealthProfile, (hp) => hp.patient)
   healthProfiles: HealthProfile[];
 }
