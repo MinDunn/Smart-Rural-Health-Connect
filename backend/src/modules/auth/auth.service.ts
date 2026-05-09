@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
@@ -12,7 +16,7 @@ export class AuthService {
     private readonly mailerService: MailerService,
   ) {}
 
-  private otpStore = new Map<string, { otp: string, expires: number }>();
+  private otpStore = new Map<string, { otp: string; expires: number }>();
 
   async forgotPassword(email: string) {
     const user = await this.usersService.findByEmail(email);
@@ -54,7 +58,7 @@ export class AuthService {
       // Vẫn log ra console để test nếu gửi mail thất bại
       console.log(`[FALLBACK] Mã OTP của bạn là: ${otp}`);
     }
-    
+
     return { message: 'Mã OTP đã được gửi đến email của bạn' };
   }
 
@@ -68,7 +72,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.usersService.updatePasswordByEmail(email, hashedPassword);
-    
+
     this.otpStore.delete(email);
 
     return { message: 'Mật khẩu đã được thay đổi thành công' };
@@ -76,14 +80,17 @@ export class AuthService {
 
   async validateGoogleUser(googleUser: any) {
     const { email, firstName, lastName } = googleUser;
-    
+
     let user = await this.usersService.findByEmail(email);
-    
+
     if (!user) {
       // Create new user if not exists
       console.log(`[AUTH] Creating new user from Google: ${email}`);
       // Using a random password since they login with Google
-      const randomPassword = await bcrypt.hash(Math.random().toString(36).slice(-10), 10);
+      const randomPassword = await bcrypt.hash(
+        Math.random().toString(36).slice(-10),
+        10,
+      );
       user = await this.usersService.create({
         email,
         password: randomPassword,
@@ -92,7 +99,7 @@ export class AuthService {
         roleName: 'citizen',
       });
     }
-    
+
     return this.login(user);
   }
 
@@ -108,7 +115,7 @@ export class AuthService {
 
   async validateUser(identifier: string, pass: string): Promise<any> {
     const user = await this.usersService.findByIdentifier(identifier);
-    if (user && await bcrypt.compare(pass, user.password)) {
+    if (user && (await bcrypt.compare(pass, user.password))) {
       const { password, ...result } = user;
       return result;
     }
@@ -116,10 +123,10 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { 
-      email: user.email, 
+    const payload = {
+      email: user.email,
       sub: user.id,
-      role: user.role?.name 
+      role: user.role?.name,
     };
     return {
       access_token: this.jwtService.sign(payload),
@@ -128,7 +135,7 @@ export class AuthService {
         email: user.email,
         profile: user.profile,
         role: user.role,
-      }
+      },
     };
   }
 }

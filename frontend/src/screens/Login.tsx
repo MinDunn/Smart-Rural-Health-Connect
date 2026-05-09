@@ -26,8 +26,12 @@ const LoginScreen = ({ onLogin, setScreen }: LoginProps) => {
     if (token && userEncoded) {
       try {
         const userData = JSON.parse(atob(userEncoded));
-        // Clear the URL parameters immediately
-        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Clear the URL parameters immediately to prevent loops
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        // Use a flag or check if already processing to avoid duplicate calls
         onLogin({ access_token: token, user: userData });
       } catch (e) {
         console.error('Error decoding google user:', e);

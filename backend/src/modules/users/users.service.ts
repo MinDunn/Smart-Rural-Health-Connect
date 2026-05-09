@@ -18,10 +18,7 @@ export class UsersService {
 
   async findByIdentifier(identifier: string): Promise<User | null> {
     return this.userRepository.findOne({
-      where: [
-        { email: identifier },
-        { profile: { phone: identifier } }
-      ],
+      where: [{ email: identifier }, { profile: { phone: identifier } }],
       relations: ['role', 'profile'],
       select: ['id', 'email', 'password', 'isActive'],
     });
@@ -51,15 +48,19 @@ export class UsersService {
     // Tìm role mặc định (ví dụ: citizen) nếu không truyền vào
     let role: Role | null = null;
     if (userData.roleName) {
-      role = await this.roleRepository.findOne({ where: { name: userData.roleName } });
+      role = await this.roleRepository.findOne({
+        where: { name: userData.roleName },
+      });
     }
-    
+
     if (!role) {
       role = await this.roleRepository.findOne({ where: { name: 'citizen' } });
     }
 
     if (!role) {
-      throw new Error('Default role "citizen" not found. Please seed the database.');
+      throw new Error(
+        'Default role "citizen" not found. Please seed the database.',
+      );
     }
 
     const user = new User();
@@ -71,13 +72,16 @@ export class UsersService {
     profile.firstName = userData.firstName || '';
     profile.lastName = userData.lastName || '';
     profile.phone = userData.phone || '';
-    
+
     user.profile = profile;
 
     return this.userRepository.save(user);
   }
 
-  async updatePasswordByEmail(email: string, newPassword: string): Promise<void> {
+  async updatePasswordByEmail(
+    email: string,
+    newPassword: string,
+  ): Promise<void> {
     const user = await this.findByEmail(email);
     if (!user) throw new Error('User not found');
     user.password = newPassword;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Types & Constants
@@ -19,6 +19,9 @@ import LoginScreen from './screens/Login';
 import RegisterScreen from './screens/Register';
 import ForgotPasswordScreen from './screens/ForgotPassword';
 import EmergencyScreen from './screens/Emergency';
+
+// API
+import { patientApi, clinicalApi } from './lib/api';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -84,11 +87,11 @@ export default function App() {
 
   // Fetch data from API
   useEffect(() => {
-    if (isLoggedIn && user) {
+    if (isLoggedIn && user && user.id) {
       const fetchData = async () => {
         try {
           // Fetch Patient/Profile
-          const patientRes = await import('./lib/api').then(m => m.patientApi.getProfile(user.id));
+          const patientRes = await patientApi.getProfile(user.id);
           const patientData = patientRes.data;
           
           if (patientData) {
@@ -101,7 +104,7 @@ export default function App() {
             }));
 
             // Fetch History
-            const historyRes = await import('./lib/api').then(m => m.clinicalApi.getHistory(patientData.id));
+            const historyRes = await clinicalApi.getHistory(patientData.id);
             const formattedHistory = historyRes.data.map((item: any) => ({
               date: new Date(item.appointmentDate).getDate().toString(),
               month: `Tháng ${new Date(item.appointmentDate).getMonth() + 1}`,
@@ -114,7 +117,7 @@ export default function App() {
             setMedicalHistory(formattedHistory);
 
             // Fetch Latest Prescription
-            const prescriptionRes = await import('./lib/api').then(m => m.clinicalApi.getLatestPrescription(patientData.id));
+            const prescriptionRes = await clinicalApi.getLatestPrescription(patientData.id);
             if (prescriptionRes.data) {
               const p = prescriptionRes.data;
               setPrescription({
@@ -132,12 +135,11 @@ export default function App() {
       };
       fetchData();
     }
-  }, [isLoggedIn, user]);
+  }, [isLoggedIn, user?.id]);
 
-  const addHistory = async (item: HistoryItem) => {
+  const addHistory = useCallback(async (item: HistoryItem) => {
     if (!patientId) return;
     try {
-      const { clinicalApi } = await import('./lib/api');
       // 1. Create Appointment
       const apptRes = await clinicalApi.createAppointment({
         patient: { id: patientId },
@@ -153,18 +155,17 @@ export default function App() {
       });
 
       // Refresh list
-      setMedicalHistory([item, ...medicalHistory]);
+      setMedicalHistory(prev => [item, ...prev]);
       alert('Đã lưu lịch sử khám thành công!');
     } catch (error) {
       console.error('Error adding history:', error);
       alert('Có lỗi xảy ra khi lưu lịch sử khám.');
     }
-  };
+  }, [patientId]);
 
-  const updatePrescription = async (data: Prescription) => {
+  const updatePrescription = useCallback(async (data: Prescription) => {
     if (!patientId) return;
     try {
-      const { clinicalApi } = await import('./lib/api');
       // Usually we need a consultationId. For simplicity, we'll assume we update for the latest appointment
       const historyRes = await clinicalApi.getHistory(patientId);
       const latestAppt = historyRes.data[0];
@@ -183,15 +184,17 @@ export default function App() {
       console.error('Error updating prescription:', error);
       alert('Có lỗi xảy ra khi cập nhật đơn thuốc.');
     }
-  };
+  }, [patientId]);
 
   const bmi = useMemo(() => {
+    if (!profile.height || profile.height <= 0) return '0.0';
     const hInM = profile.height / 100;
     return (profile.weight / (hInM * hInM)).toFixed(1);
   }, [profile.height, profile.weight]);
 
   const bmiStatus = useMemo(() => {
     const val = parseFloat(bmi);
+    if (val <= 0) return { label: '--', color: 'text-gray-400', bg: 'bg-gray-50' };
     if (val < 18.5) return { label: 'Thiếu cân', color: 'text-blue-500', bg: 'bg-blue-50' };
     if (val < 25) return { label: 'Bình thường', color: 'text-green-600', bg: 'bg-green-50' };
     if (val < 30) return { label: 'Thừa cân', color: 'text-yellow-600', bg: 'bg-yellow-50' };
@@ -203,7 +206,7 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [activeScreen, isLoggedIn]);
 
-  const handleLogin = (data: any) => {
+  const handleLogin = useCallback((data: any) => {
     localStorage.setItem('srhc_token', data.access_token);
     localStorage.setItem('srhc_user', JSON.stringify(data.user));
     setUser(data.user);
@@ -216,37 +219,41 @@ export default function App() {
         name: `${data.user.profile.lastName} ${data.user.profile.firstName}`,
       }));
     }
-  };
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('srhc_token');
     localStorage.removeItem('srhc_user');
     setUser(null);
     setIsLoggedIn(false);
     setScreen('login');
-  };
+  }, []);
+
+  const handleSetScreen = useCallback((s: Screen) => {
+    setScreen(s);
+  }, []);
 
   if (!isLoggedIn) {
     return (
       <AnimatePresence mode="wait">
         {activeScreen === 'login' && (
           <motion.div key="login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <LoginScreen onLogin={handleLogin} setScreen={setScreen} />
+            <LoginScreen onLogin={handleLogin} setScreen={handleSetScreen} />
           </motion.div>
         )}
         {activeScreen === 'register' && (
           <motion.div key="register" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <RegisterScreen onRegister={handleLogin} setScreen={setScreen} />
+            <RegisterScreen onRegister={handleLogin} setScreen={handleSetScreen} />
           </motion.div>
         )}
         {activeScreen === 'forgot-password' && (
           <motion.div key="forgot" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <ForgotPasswordScreen setScreen={setScreen} />
+            <ForgotPasswordScreen setScreen={handleSetScreen} />
           </motion.div>
         )}
         {!['login', 'register', 'forgot-password'].includes(activeScreen) && (
           <motion.div key="login-fallback" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <LoginScreen onLogin={handleLogin} setScreen={setScreen} />
+            <LoginScreen onLogin={handleLogin} setScreen={handleSetScreen} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -255,23 +262,23 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-neutral-warm pb-20 md:pb-0 font-sans">
-      <Navbar activeScreen={activeScreen} setScreen={setScreen} onLogout={handleLogout} />
+      <Navbar activeScreen={activeScreen} setScreen={handleSetScreen} onLogout={handleLogout} />
       
       <main>
         <AnimatePresence mode="wait">
           {activeScreen === 'home' && (
             <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <HomeScreen setScreen={setScreen} />
+              <HomeScreen setScreen={handleSetScreen} />
             </motion.div>
           )}
           {activeScreen === 'chat' && (
             <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <ChatScreen setScreen={setScreen} />
+              <ChatScreen setScreen={handleSetScreen} />
             </motion.div>
           )}
           {activeScreen === 'analysis' && (
             <motion.div key="analysis" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <AnalysisScreen setScreen={setScreen} />
+              <AnalysisScreen setScreen={handleSetScreen} />
             </motion.div>
           )}
           {activeScreen === 'status' && (
@@ -303,13 +310,13 @@ export default function App() {
           )}
           {activeScreen === 'emergency' && (
             <motion.div key="emergency" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <EmergencyScreen setScreen={setScreen} />
+              <EmergencyScreen setScreen={handleSetScreen} />
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
-      <BottomNav activeScreen={activeScreen} setScreen={setScreen} />
+      <BottomNav activeScreen={activeScreen} setScreen={handleSetScreen} />
     </div>
   );
 }

@@ -7,7 +7,9 @@ import { ClinicalService } from './clinical.service';
 import { ClinicalController } from './clinical.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Appointment, Consultation, Prescription])],
+  imports: [
+    TypeOrmModule.forFeature([Appointment, Consultation, Prescription]),
+  ],
   providers: [ClinicalService],
   controllers: [ClinicalController],
   exports: [ClinicalService],

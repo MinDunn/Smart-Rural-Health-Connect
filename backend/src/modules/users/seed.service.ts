@@ -55,7 +55,8 @@ export class SeedService implements OnModuleInit {
       if (!user) {
         const profile = new Profile();
         profile.firstName = 'Mẫu';
-        profile.lastName = role.name.charAt(0).toUpperCase() + role.name.slice(1);
+        profile.lastName =
+          role.name.charAt(0).toUpperCase() + role.name.slice(1);
 
         user = this.userRepository.create({
           email,
@@ -66,7 +67,9 @@ export class SeedService implements OnModuleInit {
         this.logger.log(`User created for role ${role.name}: ${email}`);
       } else {
         user.password = password;
-        this.logger.log(`User password updated for role ${role.name}: ${email}`);
+        this.logger.log(
+          `User password updated for role ${role.name}: ${email}`,
+        );
       }
 
       await this.userRepository.save(user);

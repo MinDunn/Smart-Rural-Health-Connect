@@ -29,7 +29,10 @@ export class ClinicalService {
     return this.appointmentRepository.save(appointment);
   }
 
-  async createConsultation(appointmentId: string, data: any): Promise<Consultation> {
+  async createConsultation(
+    appointmentId: string,
+    data: any,
+  ): Promise<Consultation> {
     const consultation = this.consultationRepository.create({
       ...data,
       appointment: { id: appointmentId },
@@ -37,7 +40,10 @@ export class ClinicalService {
     return this.consultationRepository.save(consultation);
   }
 
-  async createPrescription(consultationId: string, data: any): Promise<Prescription> {
+  async createPrescription(
+    consultationId: string,
+    data: any,
+  ): Promise<Prescription> {
     const prescription = this.prescriptionRepository.create({
       ...data,
       consultation: { id: consultationId },
@@ -48,7 +54,11 @@ export class ClinicalService {
   async getLatestPrescription(patientId: string): Promise<Prescription | null> {
     return this.prescriptionRepository.findOne({
       where: { consultation: { appointment: { patient: { id: patientId } } } },
-      relations: ['consultation', 'consultation.appointment', 'consultation.appointment.doctor'],
+      relations: [
+        'consultation',
+        'consultation.appointment',
+        'consultation.appointment.doctor',
+      ],
       order: { createdAt: 'DESC' },
     });
   }

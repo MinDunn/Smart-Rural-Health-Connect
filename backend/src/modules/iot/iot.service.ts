@@ -32,9 +32,9 @@ export class IotService {
       order: { timestamp: 'DESC' },
       take: 10,
     });
-    
+
     // Simple logic to check if all recent metrics are stable
-    const isStable = latest.every(m => m.isStable);
+    const isStable = latest.every((m) => m.isStable);
     return {
       isStable,
       lastChecked: latest[0]?.timestamp,

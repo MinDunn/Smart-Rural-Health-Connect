@@ -1,4 +1,15 @@
-import { Controller, Post, Body, UnauthorizedException, HttpCode, HttpStatus, Get, UseGuards, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UnauthorizedException,
+  HttpCode,
+  HttpStatus,
+  Get,
+  UseGuards,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 
@@ -9,7 +20,10 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: any) {
-    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+    const user = await this.authService.validateUser(
+      loginDto.email,
+      loginDto.password,
+    );
     if (!user) {
       throw new UnauthorizedException('Thông tin đăng nhập không chính xác');
     }
@@ -41,7 +55,11 @@ export class AuthController {
     const result = await this.authService.validateGoogleUser(req.user);
     // Redirect back to frontend with token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const userEncoded = Buffer.from(JSON.stringify(result.user)).toString('base64');
-    res.redirect(`${frontendUrl}/login?token=${result.access_token}&user=${userEncoded}`);
+    const userEncoded = Buffer.from(JSON.stringify(result.user)).toString(
+      'base64',
+    );
+    res.redirect(
+      `${frontendUrl}/login?token=${result.access_token}&user=${userEncoded}`,
+    );
   }
 }
