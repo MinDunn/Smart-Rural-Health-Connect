@@ -19,6 +19,7 @@ import LoginScreen from './screens/Login';
 import RegisterScreen from './screens/Register';
 import ForgotPasswordScreen from './screens/ForgotPassword';
 import EmergencyScreen from './screens/Emergency';
+import RequestSupportScreen from './screens/RequestSupport';
 
 // API
 import { patientApi, clinicalApi } from './lib/api';
@@ -311,6 +312,11 @@ export default function App() {
           {activeScreen === 'emergency' && (
             <motion.div key="emergency" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <EmergencyScreen setScreen={handleSetScreen} />
+            </motion.div>
+          )}
+          {activeScreen === 'request-support' && (
+            <motion.div key="request-support" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <RequestSupportScreen setScreen={handleSetScreen} patientId={patientId} />
             </motion.div>
           )}
         </AnimatePresence>

@@ -31,6 +31,18 @@ export class Appointment {
   @Column({ type: 'text', nullable: true })
   reason: string;
 
+  @Column({ type: 'simple-array', nullable: true })
+  attachments: string[];
+
+  @Column({ default: 'normal' })
+  urgency: string; // normal, high
+
+  @Column({ default: false })
+  consentGiven: boolean;
+
+  @Column({ default: false })
+  isThreeWayConsultation: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 }

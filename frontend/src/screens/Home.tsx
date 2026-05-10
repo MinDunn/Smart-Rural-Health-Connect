@@ -47,7 +47,7 @@ const HomeScreen = ({ setScreen }: HomeProps) => (
     </div>
 
     {/* Bento Grid */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
       <div 
         onClick={() => setScreen('chat')}
         className="bg-white p-8 rounded-3xl card-shadow group cursor-pointer hover:bg-green-light transition-all duration-300"
@@ -79,15 +79,30 @@ const HomeScreen = ({ setScreen }: HomeProps) => (
       </div>
 
       <div 
-        onClick={() => setScreen('status')}
+        onClick={() => setScreen('request-support')}
         className="bg-[#faf6ee] p-8 rounded-3xl card-shadow group cursor-pointer hover:bg-[#dfc49d] transition-all duration-300"
       >
         <div className="w-16 h-16 bg-[#cba258] rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110">
-          <ClipboardList className="text-white w-8 h-8" />
+          <Stethoscope className="text-white w-8 h-8" />
+        </div>
+        <h3 className="text-2xl font-bold mb-2">Y tế xã hỗ trợ</h3>
+        <p className="text-gray-500 mb-8">Gửi yêu cầu trực tiếp để được cán bộ y tế địa phương tư vấn và hướng dẫn.</p>
+        <div className="flex items-center text-[#76312f] font-bold gap-2 group-hover:gap-4 transition-all">
+          <span>Gửi yêu cầu ngay</span>
+          <ArrowRight size={20} />
+        </div>
+      </div>
+
+      <div 
+        onClick={() => setScreen('status')}
+        className="bg-white p-8 rounded-3xl card-shadow group cursor-pointer hover:bg-green-light transition-all duration-300"
+      >
+        <div className="w-16 h-16 bg-starbucks-green/10 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110">
+          <ClipboardList className="text-starbucks-green w-8 h-8" />
         </div>
         <h3 className="text-2xl font-bold mb-2">Hồ sơ sức khỏe</h3>
         <p className="text-gray-500 mb-8">Xem lại lịch sử khám bệnh, đơn thuốc và các chỉ số sức khỏe của ông bà.</p>
-        <div className="flex items-center text-[#76312f] font-bold gap-2 group-hover:gap-4 transition-all">
+        <div className="flex items-center text-starbucks-green font-bold gap-2 group-hover:gap-4 transition-all">
           <span>Xem chi tiết hồ sơ</span>
           <ArrowRight size={20} />
         </div>

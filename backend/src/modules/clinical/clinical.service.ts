@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Appointment } from './entities/appointment.entity';
@@ -7,6 +7,8 @@ import { Prescription } from './entities/prescription.entity';
 
 @Injectable()
 export class ClinicalService {
+  private readonly logger = new Logger(ClinicalService.name);
+
   constructor(
     @InjectRepository(Appointment)
     private appointmentRepository: Repository<Appointment>,
@@ -26,7 +28,13 @@ export class ClinicalService {
 
   async createAppointment(data: any): Promise<Appointment> {
     const appointment = this.appointmentRepository.create(data as Appointment);
-    return this.appointmentRepository.save(appointment);
+    const saved = await this.appointmentRepository.save(appointment);
+
+    // Simulate Broadcast Notification to all LHWs in the station
+    this.logger.log(`[BROADCAST] New support request from Patient ${data.patient?.id || 'unknown'}`);
+    this.logger.log(`[NOTIFY] Station LHWs alerted for urgency: ${data.urgency || 'normal'}`);
+
+    return saved;
   }
 
   async createConsultation(
