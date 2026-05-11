@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import AuthLayout from '../components/auth/AuthLayout';
 import { Screen } from '../types';
 import { authApi } from '../lib/api';
@@ -11,29 +11,29 @@ interface RegisterProps {
 }
 
 const RegisterScreen = ({ onRegister, setScreen }: RegisterProps) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async () => {
-    if (!email || !password || !firstName || !lastName || !confirmPassword) {
+    if (!email || !password || !fullName) {
       setError('Vui lòng điền đầy đủ các thông tin bắt buộc');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Mật khẩu nhập lại không khớp');
       return;
     }
 
     setLoading(true);
     setError('');
+
+    // Split name logic
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts.pop() || '';
+    const lastName = nameParts.join(' ') || ' ';
+
     try {
       const response = await authApi.register({
         email,
@@ -80,68 +80,60 @@ const RegisterScreen = ({ onRegister, setScreen }: RegisterProps) => {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Họ và tên</label>
+          <input 
+            type="text" 
+            placeholder="Nguyễn Văn An" 
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="w-full bg-gray-50 border-gray-100 rounded-2xl py-4 px-6 text-sm focus:ring-starbucks-green focus:border-starbucks-green transition-all" 
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Họ</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Email</label>
             <input 
-              type="text" 
-              placeholder="Nguyễn" 
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              type="email" 
+              placeholder="nguyena@gmail.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-gray-50 border-gray-100 rounded-2xl py-4 px-6 text-sm focus:ring-starbucks-green focus:border-starbucks-green transition-all" 
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tên</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Số điện thoại</label>
             <input 
-              type="text" 
-              placeholder="An" 
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              type="tel" 
+              placeholder="0xxx xxx xxx" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full bg-gray-50 border-gray-100 rounded-2xl py-4 px-6 text-sm focus:ring-starbucks-green focus:border-starbucks-green transition-all" 
             />
           </div>
         </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Email / Định danh</label>
-          <input 
-            type="email" 
-            placeholder="nguyena@gmail.com" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-gray-50 border-gray-100 rounded-2xl py-4 px-6 text-sm focus:ring-starbucks-green focus:border-starbucks-green transition-all" 
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Số điện thoại</label>
-          <input 
-            type="tel" 
-            placeholder="0xxx xxx xxx" 
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full bg-gray-50 border-gray-100 rounded-2xl py-4 px-6 text-sm focus:ring-starbucks-green focus:border-starbucks-green transition-all" 
-          />
-        </div>
+
         <div>
           <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Mật khẩu</label>
-          <input 
-            type="password" 
-            placeholder="••••••••" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-gray-50 border-gray-100 rounded-2xl py-4 px-6 text-sm focus:ring-starbucks-green focus:border-starbucks-green transition-all" 
-          />
+          <div className="relative">
+            <input 
+              type={showPassword ? "text" : "password"} 
+              placeholder="••••••••" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-gray-50 border-gray-100 rounded-2xl py-4 px-6 text-sm focus:ring-starbucks-green focus:border-starbucks-green transition-all pr-14" 
+            />
+            <button 
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-starbucks-green transition-colors"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Nhập lại mật khẩu</label>
-          <input 
-            type="password" 
-            placeholder="••••••••" 
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full bg-gray-50 border-gray-100 rounded-2xl py-4 px-6 text-sm focus:ring-starbucks-green focus:border-starbucks-green transition-all" 
-          />
-        </div>
+
         <button 
           onClick={handleSubmit}
           disabled={loading || success}
@@ -164,3 +156,4 @@ const RegisterScreen = ({ onRegister, setScreen }: RegisterProps) => {
 };
 
 export default RegisterScreen;
+

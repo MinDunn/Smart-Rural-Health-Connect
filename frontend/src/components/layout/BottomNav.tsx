@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, MessageSquare, Activity, ClipboardList, User } from 'lucide-react';
+import { Home, MessageSquare, Activity, ClipboardList, User, Stethoscope } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Screen } from '../../types';
 
@@ -13,6 +13,7 @@ const BottomNav = ({ activeScreen, setScreen }: BottomNavProps) => (
     {[
       { id: 'home', label: 'Trang chủ', icon: Home },
       { id: 'chat', label: 'Tư vấn', icon: MessageSquare },
+      { id: 'request-support', label: 'Gửi yêu cầu', icon: Stethoscope },
       { id: 'status', label: 'Tình trạng', icon: Activity },
       { id: 'medical-records', label: 'Hồ sơ', icon: ClipboardList },
       { id: 'user-profile', label: 'Cá nhân', icon: User }
@@ -21,7 +22,7 @@ const BottomNav = ({ activeScreen, setScreen }: BottomNavProps) => (
         key={item.id}
         onClick={() => setScreen(item.id as Screen)}
         className={cn(
-          "flex flex-col items-center gap-1 min-w-[72px] transition-colors",
+          "flex flex-col items-center gap-1 min-w-[72px] transition-all hover:scale-110",
           activeScreen === item.id ? "text-starbucks-green" : "text-gray-400"
         )}
       >

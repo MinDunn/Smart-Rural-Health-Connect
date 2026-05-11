@@ -26,6 +26,7 @@ const Navbar = ({ activeScreen, setScreen, onLogout }: NavbarProps) => {
         {[
           { id: 'home', label: 'Trang chủ' },
           { id: 'chat', label: 'Tư vấn AI' },
+          { id: 'request-support', label: 'Gửi yêu cầu' },
           { id: 'status', label: 'Tình trạng' },
           { id: 'medical-records', label: 'Hồ sơ' },
           { id: 'user-profile', label: 'Cá nhân' }

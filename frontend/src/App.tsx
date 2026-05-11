@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { cn } from './lib/utils';
 
 // Types & Constants
 import { Screen, Profile, HistoryItem, Prescription } from './types';
@@ -20,6 +22,7 @@ import RegisterScreen from './screens/Register';
 import ForgotPasswordScreen from './screens/ForgotPassword';
 import EmergencyScreen from './screens/Emergency';
 import RequestSupportScreen from './screens/RequestSupport';
+import RequestHistoryScreen from './screens/RequestHistory';
 
 // API
 import { patientApi, clinicalApi } from './lib/api';
@@ -27,6 +30,10 @@ import { patientApi, clinicalApi } from './lib/api';
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeScreen, setScreen] = useState<Screen>('home');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingScreen, setPendingScreen] = useState<Screen | null>(null);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
   const [user, setUser] = useState<any>(null);
   const [patientId, setPatientId] = useState<string | null>(null);
 
@@ -231,8 +238,32 @@ export default function App() {
   }, []);
 
   const handleSetScreen = useCallback((s: Screen) => {
-    setScreen(s);
-  }, []);
+    if (hasUnsavedChanges && s !== activeScreen) {
+      setPendingScreen(s);
+      setShowConfirmModal(true);
+    } else {
+      setScreen(s);
+    }
+  }, [hasUnsavedChanges, activeScreen]);
+
+  const confirmLeave = () => {
+    if (pendingScreen) {
+      setHasUnsavedChanges(false);
+      setScreen(pendingScreen);
+      setPendingScreen(null);
+    }
+    setShowConfirmModal(false);
+  };
+
+  const cancelLeave = () => {
+    setPendingScreen(null);
+    setShowConfirmModal(false);
+  };
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   if (!isLoggedIn) {
     return (
@@ -269,7 +300,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           {activeScreen === 'home' && (
             <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <HomeScreen setScreen={handleSetScreen} />
+              <HomeScreen setScreen={handleSetScreen} profile={profile} />
             </motion.div>
           )}
           {activeScreen === 'chat' && (
@@ -306,7 +337,12 @@ export default function App() {
           )}
           {activeScreen === 'user-profile' && (
             <motion.div key="user-profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <UserProfileScreen profile={profile} setProfile={setProfile} />
+              <UserProfileScreen 
+                profile={profile} 
+                setProfile={setProfile} 
+                setHasUnsavedChanges={setHasUnsavedChanges} 
+                showToast={showToast}
+              />
             </motion.div>
           )}
           {activeScreen === 'emergency' && (
@@ -316,13 +352,86 @@ export default function App() {
           )}
           {activeScreen === 'request-support' && (
             <motion.div key="request-support" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <RequestSupportScreen setScreen={handleSetScreen} patientId={patientId} />
+              <RequestSupportScreen 
+                setScreen={handleSetScreen} 
+                patientId={patientId} 
+                setHasUnsavedChanges={setHasUnsavedChanges}
+                showToast={showToast}
+              />
+            </motion.div>
+          )}
+          {activeScreen === 'request-history' && (
+            <motion.div key="request-history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <RequestHistoryScreen setScreen={handleSetScreen} patientId={patientId} />
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
       <BottomNav activeScreen={activeScreen} setScreen={handleSetScreen} />
+
+      {/* Floating Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[110] w-[90%] max-w-sm"
+          >
+            <div className={cn(
+              "p-5 rounded-3xl shadow-2xl flex items-center gap-4 border backdrop-blur-md",
+              toast.type === 'success' ? "bg-white/90 border-green-100" : "bg-white/90 border-red-100"
+            )}>
+              <div className={cn(
+                "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm",
+                toast.type === 'success' ? "bg-green-50 text-starbucks-green" : "bg-red-50 text-red-500"
+              )}>
+                {toast.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+              </div>
+              <p className="text-sm font-black text-house-green leading-snug">
+                {toast.message}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-black/40 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[48px] p-10 max-w-sm w-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-gray-100 text-center"
+            >
+              <div className="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                <AlertCircle size={48} className="text-amber-500" />
+              </div>
+              <h3 className="text-3xl font-black text-house-green mb-4 leading-tight">Chưa lưu thông tin!</h3>
+              <p className="text-gray-500 text-base mb-10 leading-relaxed">
+                Ông bà đang có thay đổi chưa được lưu lại. Nếu rời đi lúc này, những gì ông bà vừa nhập sẽ bị mất hết ạ.
+              </p>
+              <div className="space-y-4">
+                <button 
+                  onClick={cancelLeave}
+                  className="w-full py-5 bg-starbucks-green text-white rounded-[24px] font-black text-xl shadow-xl shadow-green-200 active:scale-95 transition-all"
+                >
+                  Ở LẠI ĐỂ LƯU
+                </button>
+                <button 
+                  onClick={confirmLeave}
+                  className="w-full py-4 text-gray-400 font-bold text-base hover:text-red-500 transition-colors"
+                >
+                  BỎ QUA VÀ RỜI ĐI
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
