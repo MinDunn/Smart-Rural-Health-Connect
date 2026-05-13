@@ -3,6 +3,8 @@ export class UpdatePatientDto {
   lastName?: string;
   phone?: string;
   address?: string;
+  gender?: string;
+  birthYear?: string;
   bloodType?: string;
   allergies?: string;
   medicalHistory?: string;

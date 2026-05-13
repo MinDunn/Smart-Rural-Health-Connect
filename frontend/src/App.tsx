@@ -84,6 +84,10 @@ export default function App() {
           setProfile(prev => ({
             ...prev,
             name: `${userData.profile.lastName} ${userData.profile.firstName}`,
+            phone: userData.profile.phone || prev.phone,
+            address: userData.profile.address || prev.address,
+            birthYear: userData.profile.birthYear || prev.birthYear,
+            gender: userData.profile.gender || prev.gender,
           }));
         }
       } catch (e) {
@@ -109,6 +113,17 @@ export default function App() {
               bloodType: patientData.bloodType || prev.bloodType,
               allergies: patientData.allergies || prev.allergies,
               conditions: patientData.medicalHistory ? [patientData.medicalHistory] : prev.conditions,
+              emergencyContacts: patientData.emergencyContacts || prev.emergencyContacts,
+              // Also sync from user profile if available in relation
+              name: patientData.user?.profile 
+                ? `${patientData.user.profile.lastName} ${patientData.user.profile.firstName}` 
+                : prev.name,
+              phone: patientData.user?.profile?.phone || prev.phone,
+              address: patientData.user?.profile?.address || prev.address,
+              gender: patientData.user?.profile?.gender || prev.gender,
+              birthYear: patientData.user?.profile?.dob 
+                ? new Date(patientData.user.profile.dob).getFullYear().toString() 
+                : prev.birthYear,
             }));
 
             // Fetch History
@@ -293,145 +308,155 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-warm pb-20 md:pb-0 font-sans">
-      <Navbar activeScreen={activeScreen} setScreen={handleSetScreen} onLogout={handleLogout} />
-      
-      <main>
-        <AnimatePresence mode="wait">
-          {activeScreen === 'home' && (
-            <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <HomeScreen setScreen={handleSetScreen} profile={profile} />
-            </motion.div>
-          )}
-          {activeScreen === 'chat' && (
-            <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <ChatScreen setScreen={handleSetScreen} />
-            </motion.div>
-          )}
-          {activeScreen === 'analysis' && (
-            <motion.div key="analysis" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <AnalysisScreen setScreen={handleSetScreen} />
-            </motion.div>
-          )}
-          {activeScreen === 'status' && (
-            <motion.div key="status" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <StatusScreen 
-                profile={profile} 
-                setProfile={setProfile} 
-                bmi={bmi} 
-                bmiStatus={bmiStatus}
-                patientId={patientId}
-              />
-            </motion.div>
-          )}
-          {activeScreen === 'medical-records' && (
-            <motion.div key="medical-records" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <MedicalRecordsScreen 
-                history={medicalHistory} 
-                onAddHistory={addHistory}
-                prescription={prescription}
-                onUpdatePrescription={updatePrescription}
-                patientId={patientId}
-              />
-            </motion.div>
-          )}
-          {activeScreen === 'user-profile' && (
-            <motion.div key="user-profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <UserProfileScreen 
-                profile={profile} 
-                setProfile={setProfile} 
-                setHasUnsavedChanges={setHasUnsavedChanges} 
-                showToast={showToast}
-              />
-            </motion.div>
-          )}
-          {activeScreen === 'emergency' && (
-            <motion.div key="emergency" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <EmergencyScreen setScreen={handleSetScreen} />
-            </motion.div>
-          )}
-          {activeScreen === 'request-support' && (
-            <motion.div key="request-support" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <RequestSupportScreen 
-                setScreen={handleSetScreen} 
-                patientId={patientId} 
-                setHasUnsavedChanges={setHasUnsavedChanges}
-                showToast={showToast}
-              />
-            </motion.div>
-          )}
-          {activeScreen === 'request-history' && (
-            <motion.div key="request-history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <RequestHistoryScreen setScreen={handleSetScreen} patientId={patientId} />
+    <div className="min-h-screen bg-neutral-warm pb-20 md:pb-0 font-sans relative overflow-hidden">
+      {/* Dynamic Background Elements */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-green-light/30 rounded-full blur-[120px] animate-blob" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-starbucks-green/5 rounded-full blur-[100px] animate-blob animation-delay-2000" />
+        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-house-green/5 rounded-full blur-[80px] animate-blob animation-delay-4000" />
+      </div>
+
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <Navbar activeScreen={activeScreen} setScreen={handleSetScreen} onLogout={handleLogout} />
+        
+        <main className="flex-grow">
+          <AnimatePresence mode="wait">
+            {activeScreen === 'home' && (
+              <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <HomeScreen setScreen={handleSetScreen} profile={profile} />
+              </motion.div>
+            )}
+            {activeScreen === 'chat' && (
+              <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <ChatScreen setScreen={handleSetScreen} />
+              </motion.div>
+            )}
+            {activeScreen === 'analysis' && (
+              <motion.div key="analysis" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <AnalysisScreen setScreen={handleSetScreen} />
+              </motion.div>
+            )}
+            {activeScreen === 'status' && (
+              <motion.div key="status" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <StatusScreen 
+                  profile={profile} 
+                  setProfile={setProfile} 
+                  bmi={bmi} 
+                  bmiStatus={bmiStatus}
+                  patientId={patientId}
+                />
+              </motion.div>
+            )}
+            {activeScreen === 'medical-records' && (
+              <motion.div key="medical-records" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <MedicalRecordsScreen 
+                  history={medicalHistory} 
+                  onAddHistory={addHistory}
+                  prescription={prescription}
+                  onUpdatePrescription={updatePrescription}
+                  patientId={patientId}
+                />
+              </motion.div>
+            )}
+            {activeScreen === 'user-profile' && (
+              <motion.div key="user-profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <UserProfileScreen 
+                  profile={profile} 
+                  setProfile={setProfile} 
+                  setHasUnsavedChanges={setHasUnsavedChanges} 
+                  showToast={showToast}
+                />
+              </motion.div>
+            )}
+            {activeScreen === 'emergency' && (
+              <motion.div key="emergency" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <EmergencyScreen setScreen={handleSetScreen} />
+              </motion.div>
+            )}
+            {activeScreen === 'request-support' && (
+              <motion.div key="request-support" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <RequestSupportScreen 
+                  setScreen={handleSetScreen} 
+                  patientId={patientId} 
+                  setHasUnsavedChanges={setHasUnsavedChanges}
+                  showToast={showToast}
+                  prescription={prescription}
+                />
+              </motion.div>
+            )}
+            {activeScreen === 'request-history' && (
+              <motion.div key="request-history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <RequestHistoryScreen setScreen={handleSetScreen} patientId={patientId} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+
+        <BottomNav activeScreen={activeScreen} setScreen={handleSetScreen} />
+
+        {/* Floating Toast Notification */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div 
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[110] w-[90%] max-w-sm"
+            >
+              <div className={cn(
+                "glass p-5 rounded-3xl shadow-2xl flex items-center gap-4 border-glass-border",
+                toast.type === 'success' ? "border-green-100" : "border-red-100"
+              )}>
+                <div className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm",
+                  toast.type === 'success' ? "bg-green-50 text-starbucks-green" : "bg-red-50 text-red-500"
+                )}>
+                  {toast.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+                </div>
+                <p className="text-sm font-black text-house-green leading-snug">
+                  {toast.message}
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
 
-      <BottomNav activeScreen={activeScreen} setScreen={handleSetScreen} />
-
-      {/* Floating Toast Notification */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[110] w-[90%] max-w-sm"
-          >
-            <div className={cn(
-              "p-5 rounded-3xl shadow-2xl flex items-center gap-4 border backdrop-blur-md",
-              toast.type === 'success' ? "bg-white/90 border-green-100" : "bg-white/90 border-red-100"
-            )}>
-              <div className={cn(
-                "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm",
-                toast.type === 'success' ? "bg-green-50 text-starbucks-green" : "bg-red-50 text-red-500"
-              )}>
-                {toast.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
-              </div>
-              <p className="text-sm font-black text-house-green leading-snug">
-                {toast.message}
-              </p>
+        {/* Custom Confirmation Modal */}
+        <AnimatePresence>
+          {showConfirmModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-black/20 backdrop-blur-md">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="glass rounded-[48px] p-10 max-w-sm w-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-glass-border text-center"
+              >
+                <div className="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                  <AlertCircle size={48} className="text-amber-500" />
+                </div>
+                <h3 className="text-3xl font-black text-house-green mb-4 leading-tight">Chưa lưu thông tin!</h3>
+                <p className="text-gray-500 text-base mb-10 leading-relaxed">
+                  Ông bà đang có thay đổi chưa được lưu lại. Nếu rời đi lúc này, những gì ông bà vừa nhập sẽ bị mất hết ạ.
+                </p>
+                <div className="space-y-4">
+                  <button 
+                    onClick={cancelLeave}
+                    className="w-full py-5 bg-starbucks-green text-white rounded-[24px] font-black text-xl shadow-xl shadow-green-200 active:scale-95 transition-all"
+                  >
+                    Ở LẠI ĐỂ LƯU
+                  </button>
+                  <button 
+                    onClick={confirmLeave}
+                    className="w-full py-4 text-gray-400 font-bold text-base hover:text-red-500 transition-colors"
+                  >
+                    BỎ QUA VÀ RỜI ĐI
+                  </button>
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Custom Confirmation Modal */}
-      <AnimatePresence>
-        {showConfirmModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-black/40 backdrop-blur-md">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[48px] p-10 max-w-sm w-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-gray-100 text-center"
-            >
-              <div className="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-                <AlertCircle size={48} className="text-amber-500" />
-              </div>
-              <h3 className="text-3xl font-black text-house-green mb-4 leading-tight">Chưa lưu thông tin!</h3>
-              <p className="text-gray-500 text-base mb-10 leading-relaxed">
-                Ông bà đang có thay đổi chưa được lưu lại. Nếu rời đi lúc này, những gì ông bà vừa nhập sẽ bị mất hết ạ.
-              </p>
-              <div className="space-y-4">
-                <button 
-                  onClick={cancelLeave}
-                  className="w-full py-5 bg-starbucks-green text-white rounded-[24px] font-black text-xl shadow-xl shadow-green-200 active:scale-95 transition-all"
-                >
-                  Ở LẠI ĐỂ LƯU
-                </button>
-                <button 
-                  onClick={confirmLeave}
-                  className="w-full py-4 text-gray-400 font-bold text-base hover:text-red-500 transition-colors"
-                >
-                  BỎ QUA VÀ RỜI ĐI
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

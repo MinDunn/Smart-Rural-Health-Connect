@@ -11,12 +11,12 @@ interface MedicalRecordsProps {
   patientId: string | null;
 }
 
-const MedicalRecordsScreen = ({ 
-  history, 
-  onAddHistory, 
-  prescription, 
+const MedicalRecordsScreen = ({
+  history,
+  onAddHistory,
+  prescription,
   onUpdatePrescription,
-  patientId 
+  patientId
 }: MedicalRecordsProps) => {
   const [showHistoryForm, setShowHistoryForm] = useState(false);
   const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
@@ -52,9 +52,9 @@ const MedicalRecordsScreen = ({
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }} 
-      animate={{ opacity: 1, y: 0 }} 
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       className="max-w-7xl mx-auto px-6 md:px-12 py-12 pb-32 space-y-12"
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -63,7 +63,7 @@ const MedicalRecordsScreen = ({
           <p className="text-gray-500">Lịch sử khám bệnh và đơn thuốc được lưu trữ tại đây.</p>
         </div>
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={() => setShowHistoryForm(true)}
             className="px-6 py-3 bg-starbucks-green text-white rounded-2xl text-sm font-bold shadow-lg shadow-green-900/20 active:scale-95 transition-all flex items-center gap-2"
           >
@@ -78,7 +78,7 @@ const MedicalRecordsScreen = ({
           <h3 className="text-xl font-bold text-house-green flex items-center gap-2">
             <Calendar size={20} className="text-starbucks-green" /> Lịch sử khám bệnh
           </h3>
-          
+
           {history.map((item, i) => (
             <div key={i} className="bg-white p-6 rounded-[32px] card-shadow flex flex-col md:flex-row gap-6 hover:scale-[1.01] transition-all cursor-pointer border border-gray-50">
               <div className="bg-green-light min-w-[100px] h-24 rounded-2xl flex flex-col items-center justify-center p-4 text-starbucks-green font-bold shrink-0 shadow-sm border border-starbucks-green/5">
@@ -111,7 +111,7 @@ const MedicalRecordsScreen = ({
             <h3 className="text-xl font-bold text-house-green flex items-center gap-2">
               <Pill size={20} className="text-starbucks-green" /> Đơn thuốc gần nhất
             </h3>
-            <button 
+            <button
               onClick={() => {
                 setNewPrescription(prescription);
                 setShowPrescriptionForm(true);
@@ -121,7 +121,7 @@ const MedicalRecordsScreen = ({
               Cập nhật đơn
             </button>
           </div>
-          
+
           <div className="bg-white rounded-[40px] card-shadow overflow-hidden border border-gray-50">
             <div className="bg-starbucks-green p-8 text-white">
               <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-2">MÃ ĐƠN: {prescription.id}</p>
@@ -162,12 +162,12 @@ const MedicalRecordsScreen = ({
       <AnimatePresence>
         {showHistoryForm && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm" 
-              onClick={() => setShowHistoryForm(false)} 
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowHistoryForm(false)}
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl p-8 relative z-10 max-h-[90vh] overflow-y-auto"
             >
@@ -176,34 +176,34 @@ const MedicalRecordsScreen = ({
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Ngày</label>
-                    <input type="text" placeholder="12" value={newHistory.date} onChange={e => setNewHistory({...newHistory, date: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                    <input type="text" placeholder="12" value={newHistory.date} onChange={e => setNewHistory({ ...newHistory, date: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tháng (vd: Tháng 03)</label>
-                    <input type="text" placeholder="Tháng 03" value={newHistory.month} onChange={e => setNewHistory({...newHistory, month: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                    <input type="text" placeholder="Tháng 03" value={newHistory.month} onChange={e => setNewHistory({ ...newHistory, month: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Năm</label>
-                    <input type="text" placeholder="2026" value={newHistory.year} onChange={e => setNewHistory({...newHistory, year: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                    <input type="text" placeholder="2026" value={newHistory.year} onChange={e => setNewHistory({ ...newHistory, year: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tên đợt khám</label>
-                  <input type="text" placeholder="Kiểm tra tổng quát" value={newHistory.title} onChange={e => setNewHistory({...newHistory, title: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                  <input type="text" placeholder="Kiểm tra tổng quát" value={newHistory.title} onChange={e => setNewHistory({ ...newHistory, title: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Cơ sở y tế</label>
-                  <input type="text" placeholder="Trạm y tế Phường" value={newHistory.hospital} onChange={e => setNewHistory({...newHistory, hospital: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                  <input type="text" placeholder="Trạm y tế Phường" value={newHistory.hospital} onChange={e => setNewHistory({ ...newHistory, hospital: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Bác sĩ</label>
-                  <input type="text" placeholder="BS. Lê Mạnh Hùng" value={newHistory.doctor} onChange={e => setNewHistory({...newHistory, doctor: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                  <input type="text" placeholder="BS. Lê Mạnh Hùng" value={newHistory.doctor} onChange={e => setNewHistory({ ...newHistory, doctor: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Kết luận</label>
-                  <textarea rows={3} placeholder="Mô tả kết quả..." value={newHistory.result} onChange={e => setNewHistory({...newHistory, result: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                  <textarea rows={3} placeholder="Mô tả kết quả..." value={newHistory.result} onChange={e => setNewHistory({ ...newHistory, result: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                 </div>
-                <button 
+                <button
                   onClick={handleAddHistory}
                   className="w-full bg-starbucks-green text-white py-4 rounded-3xl font-bold shadow-lg shadow-green-900/20 active:scale-95 transition-all mt-4"
                 >
@@ -219,12 +219,12 @@ const MedicalRecordsScreen = ({
       <AnimatePresence>
         {showPrescriptionForm && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm" 
-              onClick={() => setShowPrescriptionForm(false)} 
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowPrescriptionForm(false)}
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl p-8 relative z-10 max-h-[90vh] overflow-y-auto"
             >
@@ -232,20 +232,20 @@ const MedicalRecordsScreen = ({
               <div className="space-y-4">
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Mã đơn</label>
-                  <input type="text" value={newPrescription.id} onChange={e => setNewPrescription({...newPrescription, id: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                  <input type="text" value={newPrescription.id} onChange={e => setNewPrescription({ ...newPrescription, id: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tên đơn thuốc</label>
-                  <input type="text" value={newPrescription.title} onChange={e => setNewPrescription({...newPrescription, title: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                  <input type="text" value={newPrescription.title} onChange={e => setNewPrescription({ ...newPrescription, title: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Ngày cấp</label>
-                    <input type="text" value={newPrescription.date} onChange={e => setNewPrescription({...newPrescription, date: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                    <input type="text" value={newPrescription.date} onChange={e => setNewPrescription({ ...newPrescription, date: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Bác sĩ cấp</label>
-                    <input type="text" value={newPrescription.doctor} onChange={e => setNewPrescription({...newPrescription, doctor: e.target.value})} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
+                    <input type="text" value={newPrescription.doctor} onChange={e => setNewPrescription({ ...newPrescription, doctor: e.target.value })} className="w-full bg-gray-50 border-gray-100 rounded-xl py-3 px-4 text-sm" />
                   </div>
                 </div>
 
@@ -255,22 +255,22 @@ const MedicalRecordsScreen = ({
                     {newPrescription.medications.map((m: any, i: number) => (
                       <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                         <span className="text-sm font-bold">{m.name} ({m.timing}, {m.dosage})</span>
-                        <button onClick={() => setNewPrescription({...newPrescription, medications: newPrescription.medications.filter((_: any, idx: number) => idx !== i)})} className="text-red-500 text-xs">Xóa</button>
+                        <button onClick={() => setNewPrescription({ ...newPrescription, medications: newPrescription.medications.filter((_: any, idx: number) => idx !== i) })} className="text-red-500 text-xs">Xóa</button>
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="bg-green-light/30 p-4 rounded-2xl space-y-3">
-                    <input type="text" placeholder="Tên thuốc" value={newMed.name} onChange={e => setNewMed({...newMed, name: e.target.value})} className="w-full bg-white border-gray-100 rounded-xl py-2 px-3 text-sm" />
+                    <input type="text" placeholder="Tên thuốc" value={newMed.name} onChange={e => setNewMed({ ...newMed, name: e.target.value })} className="w-full bg-white border-gray-100 rounded-xl py-2 px-3 text-sm" />
                     <div className="grid grid-cols-2 gap-2">
-                      <input type="text" placeholder="Thời điểm (vd: Sáng)" value={newMed.timing} onChange={e => setNewMed({...newMed, timing: e.target.value})} className="w-full bg-white border-gray-100 rounded-xl py-2 px-3 text-sm" />
-                      <input type="text" placeholder="Liều lượng (vd: 1 viên)" value={newMed.dosage} onChange={e => setNewMed({...newMed, dosage: e.target.value})} className="w-full bg-white border-gray-100 rounded-xl py-2 px-3 text-sm" />
+                      <input type="text" placeholder="Thời điểm (vd: Sáng)" value={newMed.timing} onChange={e => setNewMed({ ...newMed, timing: e.target.value })} className="w-full bg-white border-gray-100 rounded-xl py-2 px-3 text-sm" />
+                      <input type="text" placeholder="Liều lượng (vd: 1 viên)" value={newMed.dosage} onChange={e => setNewMed({ ...newMed, dosage: e.target.value })} className="w-full bg-white border-gray-100 rounded-xl py-2 px-3 text-sm" />
                     </div>
                     <button onClick={addMedication} className="w-full py-2 bg-starbucks-green text-white rounded-xl text-xs font-bold uppercase">Thêm thuốc</button>
                   </div>
                 </div>
 
-                <button 
+                <button
                   onClick={handleUpdatePrescription}
                   className="w-full bg-house-green text-white py-4 rounded-3xl font-bold shadow-lg active:scale-95 transition-all mt-6"
                 >

@@ -62,6 +62,11 @@ export class PatientsService {
       if (data.phone !== undefined) patient.user.profile.phone = data.phone;
       if (data.address !== undefined)
         patient.user.profile.address = data.address;
+      if (data.gender !== undefined)
+        patient.user.profile.gender = data.gender;
+      if (data.birthYear !== undefined) {
+        patient.user.profile.dob = new Date(`${data.birthYear}-01-01`);
+      }
       await this.userRepository.save(patient.user);
     }
 

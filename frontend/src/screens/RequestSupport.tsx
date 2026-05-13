@@ -6,7 +6,7 @@ import {
   Upload, Calendar, Clock, MapPin, Info, Activity, Pill, Camera,
   Mic, Volume2, Square, Play, Pause, Trash2, History as HistoryIcon
 } from 'lucide-react';
-import { Screen } from '../types';
+import { Prescription, Screen } from '../types';
 import { cn } from '../lib/utils';
 import { clinicalApi } from '../lib/api';
 
@@ -15,9 +15,10 @@ interface RequestSupportProps {
   patientId: string | null;
   setHasUnsavedChanges: (val: boolean) => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  prescription?: Prescription;
 }
 
-const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, showToast }: RequestSupportProps) => {
+const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, showToast, prescription }: RequestSupportProps) => {
   const [supportType, setSupportType] = useState<'general' | 'prescription' | 'urgent'>('general');
   const [reason, setReason] = useState('');
   const [medication, setMedication] = useState('');
@@ -35,6 +36,8 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showReminderPrompt, setShowReminderPrompt] = useState(false);
+  const [selectedPrescriptionId, setSelectedPrescriptionId] = useState<string | null>(null);
   
   // Track unsaved changes
   useEffect(() => {
@@ -196,11 +199,32 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
       await clinicalApi.createAppointment(requestData);
       setHasUnsavedChanges(false);
       setIsSuccess(true);
+      setShowReminderPrompt(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       alert('Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const isPrescriptionOld = (dateStr: string) => {
+    if (!dateStr || dateStr === '--/--/----') return false;
+    try {
+      const parts = dateStr.split('/');
+      const pDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      return pDate < threeMonthsAgo;
+    } catch (e) { return false; }
+  };
+
+  const handleRefillSelection = () => {
+    if (prescription && prescription.medications.length > 0) {
+      const medList = prescription.medications.map(m => `- ${m.name}: ${m.dosage} (${m.timing})`).join('\n');
+      setReason(`Tôi muốn gia hạn đơn thuốc kê ngày ${prescription.date}:\n${medList}`);
+      setSelectedPrescriptionId(prescription.id);
+      showToast("Đã chọn đơn thuốc cũ thành công!", "success");
     }
   };
 
@@ -232,15 +256,52 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
             </p>
           </div>
 
-          <div className="bg-green-light/30 p-6 rounded-3xl flex items-center gap-5 text-left border border-green-light">
-            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm">
-              <Clock className="text-starbucks-green" size={28} />
+          {showReminderPrompt && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              className="bg-blue-50/50 p-8 rounded-[40px] border-2 border-dashed border-blue-100 space-y-6"
+            >
+              <div className="flex items-center gap-4 text-left">
+                <div className="w-14 h-14 bg-blue-500 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <Clock size={28} />
+                </div>
+                <div>
+                  <h4 className="text-lg font-black text-blue-900">Ông bà có muốn đặt báo thức uống thuốc?</h4>
+                  <p className="text-xs text-blue-600 font-medium italic">Hệ thống sẽ tự động nhắc ông bà khi đến giờ uống thuốc theo đơn này.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => {
+                    showToast("Đã cài đặt nhắc nhở tự động!", "success");
+                    setShowReminderPrompt(false);
+                  }}
+                  className="flex-1 py-4 bg-blue-500 text-white rounded-2xl font-black text-sm shadow-lg hover:bg-blue-600 transition-all active:scale-95"
+                >
+                  ĐỒNG Ý CÀI ĐẶT
+                </button>
+                <button 
+                  onClick={() => setShowReminderPrompt(false)}
+                  className="px-6 py-4 bg-white text-gray-400 rounded-2xl font-bold text-sm border border-gray-100 hover:bg-gray-50"
+                >
+                  ĐỂ SAU
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {!showReminderPrompt && (
+            <div className="bg-green-light/30 p-6 rounded-3xl flex items-center gap-5 text-left border border-green-light">
+              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                <Clock className="text-starbucks-green" size={28} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Thời gian chờ</p>
+                <p className="text-xl font-black text-house-green">Dưới 30 phút</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Thời gian chờ</p>
-              <p className="text-xl font-black text-house-green">Dưới 30 phút</p>
-            </div>
-          </div>
+          )}
 
           <button
             onClick={() => setScreen('home')}
@@ -472,41 +533,104 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-10"
               >
+                {/* SMART REFILL SECTION */}
+                {prescription && prescription.medications.length > 0 && (
+                  <section className="bg-white rounded-[48px] p-8 border-4 border-starbucks-green shadow-2xl relative overflow-hidden group">
+                    <div className="absolute -top-12 -right-12 w-32 h-32 bg-green-50 rounded-full group-hover:scale-150 transition-transform duration-700" />
+                    
+                    <div className="relative z-10 space-y-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-starbucks-green text-white rounded-[24px] flex items-center justify-center shadow-lg shadow-green-200">
+                          <HistoryIcon size={32} />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-black text-house-green">Gia hạn nhanh đơn thuốc cũ</h2>
+                          <p className="text-sm text-gray-500 font-medium italic">Đơn thuốc kê ngày {prescription.date}</p>
+                        </div>
+                      </div>
+
+                      {isPrescriptionOld(prescription.date) && (
+                        <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-4">
+                          <AlertCircle className="text-amber-500 shrink-0 mt-0.5" size={20} />
+                          <p className="text-sm font-bold text-amber-700 leading-snug">
+                            Đơn thuốc này đã khá lâu (hơn 3 tháng). Bác sĩ có thể sẽ cần tư vấn kỹ hơn trước khi cấp lại cho ông bà nhé!
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="bg-gray-50/50 p-6 rounded-[32px] border border-gray-100 space-y-4">
+                        {prescription.medications.slice(0, 2).map((m, i) => (
+                          <div key={i} className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                              <Pill size={18} className="text-starbucks-green" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-house-green">{m.name}</p>
+                              <p className="text-xs text-gray-400">{m.dosage} - {m.timing}</p>
+                            </div>
+                          </div>
+                        ))}
+                        {prescription.medications.length > 2 && (
+                          <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest pl-14">... và {prescription.medications.length - 2} loại khác</p>
+                        )}
+                      </div>
+
+                      <button 
+                        onClick={handleRefillSelection}
+                        className={cn(
+                          "w-full py-5 rounded-[24px] font-black text-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3",
+                          selectedPrescriptionId === prescription.id 
+                            ? "bg-house-green text-white" 
+                            : "bg-starbucks-green text-white hover:bg-house-green"
+                        )}
+                      >
+                        {selectedPrescriptionId === prescription.id ? <CheckCircle2 size={24} /> : <HistoryIcon size={24} />}
+                        {selectedPrescriptionId === prescription.id ? "ĐÃ CHỌN ĐƠN NÀY" : "SỬ DỤNG ĐƠN THUỐC NÀY"}
+                      </button>
+                    </div>
+                  </section>
+                )}
+
                 <section className="bg-orange-50/30 rounded-[48px] p-10 border-2 border-orange-100 shadow-xl shadow-orange-100/20 space-y-8">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600">
                       <Pill size={28} />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-house-green">Thông tin đơn thuốc cần cấp</h2>
-                      <p className="text-sm text-gray-500">Ông bà vui lòng cung cấp thông tin đơn thuốc cũ bên dưới.</p>
+                      <h2 className="text-2xl font-bold text-house-green">Yêu cầu thuốc cụ thể</h2>
+                      <p className="text-sm text-gray-500">Ông bà có thể viết tên thuốc hoặc ghi chú thêm tại đây.</p>
                     </div>
                   </div>
                   
                   <div className="space-y-6">
                     <div className="space-y-4">
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tên thuốc hoặc ghi chú thêm</p>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tên thuốc hoặc ghi chú</p>
                       <textarea
                         value={reason}
-                        onChange={(e) => setReason(e.target.value)}
+                        onChange={(e) => {
+                          setReason(e.target.value);
+                          setSelectedPrescriptionId(null);
+                        }}
                         placeholder="Ví dụ: Tôi cần cấp lại đơn thuốc huyết áp tháng trước..."
-                        className="w-full bg-white border-2 border-orange-50 rounded-[32px] p-8 text-lg focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 transition-all min-h-[200px] resize-none outline-none shadow-sm"
+                        className="w-full bg-white border-2 border-orange-50 rounded-[32px] p-8 text-lg focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 transition-all min-h-[160px] resize-none outline-none shadow-sm"
                       />
                     </div>
                     
                     <div className="bg-white p-8 rounded-[32px] border border-orange-50 shadow-sm space-y-6">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <Camera className="text-orange-500" size={20} />
-                          <p className="text-sm font-bold text-house-green uppercase tracking-tight">Chụp ảnh đơn thuốc cũ (Rất quan trọng)</p>
+                      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <Camera className="text-orange-500" size={20} />
+                            <p className="text-sm font-black text-house-green uppercase tracking-tight">Chụp ảnh lọ thuốc cũ</p>
+                          </div>
+                          <p className="text-xs text-gray-400 italic">Việc chụp ảnh thực tế sẽ giúp bác sĩ an tâm duyệt đơn nhanh hơn.</p>
                         </div>
-                        <label className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-xl text-xs font-black cursor-pointer hover:bg-orange-600 transition-all shadow-md">
-                          <Upload size={16} />
+                        <label className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-orange-500 text-white rounded-2xl text-base font-black cursor-pointer hover:bg-orange-600 transition-all shadow-lg active:scale-95">
+                          <Camera size={24} />
                           CHỤP / TẢI ẢNH
                           <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
                         </label>
                       </div>
-                      <p className="text-xs text-gray-400 italic">Việc chụp ảnh đơn thuốc sẽ giúp bác sĩ kiểm tra thông tin nhanh hơn.</p>
                     </div>
                   </div>
                 </section>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Home, MessageSquare, Activity, ClipboardList, User, Stethoscope } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { Screen } from '../../types';
 
@@ -9,30 +10,41 @@ interface BottomNavProps {
 }
 
 const BottomNav = ({ activeScreen, setScreen }: BottomNavProps) => (
-  <div className="md:hidden fixed bottom-0 left-0 right-0 h-[88px] bg-white border-t border-gray-100 flex items-center justify-around px-2 z-50">
+  <div className="md:hidden fixed bottom-6 left-6 right-6 h-[84px] glass border-white/40 rounded-[32px] flex items-center justify-around px-4 z-50 shadow-2xl">
     {[
-      { id: 'home', label: 'Trang chủ', icon: Home },
+      { id: 'home', label: 'Home', icon: Home },
       { id: 'chat', label: 'Tư vấn', icon: MessageSquare },
-      { id: 'request-support', label: 'Gửi yêu cầu', icon: Stethoscope },
-      { id: 'status', label: 'Tình trạng', icon: Activity },
+      { id: 'request-support', label: 'Hỗ trợ', icon: Stethoscope },
+      { id: 'status', label: 'Chỉ số', icon: Activity },
       { id: 'medical-records', label: 'Hồ sơ', icon: ClipboardList },
-      { id: 'user-profile', label: 'Cá nhân', icon: User }
+      { id: 'user-profile', label: 'Tôi', icon: User }
     ].map((item) => (
       <button
         key={item.id}
         onClick={() => setScreen(item.id as Screen)}
         className={cn(
-          "flex flex-col items-center gap-1 min-w-[72px] transition-all hover:scale-110",
-          activeScreen === item.id ? "text-starbucks-green" : "text-gray-400"
+          "flex flex-col items-center gap-1.5 transition-all relative",
+          activeScreen === item.id ? "text-emerald-deep" : "text-emerald-deep/40"
         )}
       >
         <div className={cn(
-          "p-2 rounded-2xl transition-all",
-          activeScreen === item.id ? "bg-green-light" : "bg-transparent"
+          "p-2 rounded-[18px] transition-all relative z-10",
+          activeScreen === item.id ? "bg-emerald-deep/5 scale-110" : "bg-transparent"
         )}>
-          <item.icon size={24} strokeWidth={activeScreen === item.id ? 2.5 : 2} />
+          <item.icon size={26} strokeWidth={activeScreen === item.id ? 2.5 : 2} />
         </div>
-        <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
+        <span className={cn(
+          "text-[10px] font-black uppercase tracking-widest",
+          activeScreen === item.id ? "opacity-100" : "opacity-40"
+        )}>
+          {item.label}
+        </span>
+        {activeScreen === item.id && (
+          <motion.div 
+            layoutId="nav-indicator"
+            className="absolute top-[-12px] w-1 h-1 bg-emerald-deep rounded-full shadow-[0_0_8px_rgba(0,72,47,0.5)]"
+          />
+        )}
       </button>
     ))}
   </div>
