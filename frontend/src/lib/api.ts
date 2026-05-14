@@ -20,10 +20,14 @@ export const authApi = {
   register: (data: any) => api.post('/auth/register', data),
   forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
   resetPassword: (data: any) => api.post('/auth/reset-password', data),
+  getHealthWorkers: () => api.get('/users/health-workers'),
+  getUserById: (id: string) => api.get(`/users/${id}`),
+  updateUserProfile: (id: string, data: any) => api.put(`/users/${id}/profile`, data),
 };
 
 export const patientApi = {
   getProfile: (userId: string) => api.get(`/patients/${userId}`),
+  getAllPatients: () => api.get('/patients'),
   updateProfile: (userId: string, data: any) => api.put(`/patients/${userId}`, data),
   addHealthProfile: (userId: string, data: any) => api.post(`/patients/${userId}/health-profiles`, data),
 };
@@ -34,6 +38,11 @@ export const clinicalApi = {
   addConsultation: (appointmentId: string, data: any) => api.post(`/clinical/appointments/${appointmentId}/consultation`, data),
   addPrescription: (consultationId: string, data: any) => api.post(`/clinical/consultations/${consultationId}/prescription`, data),
   getLatestPrescription: (patientId: string) => api.get(`/clinical/latest-prescription/${patientId}`),
+  getPendingRequests: () => api.get('/clinical/requests/pending'),
+  getAcceptedRequests: () => api.get('/clinical/requests/accepted'),
+  acceptRequest: (id: string) => api.patch(`/clinical/appointments/${id}/accept`),
+  getDashboardStats: () => api.get('/clinical/dashboard/stats'),
+  getRecentActivity: () => api.get('/clinical/dashboard/activity'),
 };
 
 export const iotApi = {

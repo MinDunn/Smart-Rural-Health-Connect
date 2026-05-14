@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Patient } from './entities/patient.entity';
-import { HealthProfile } from './entities/health-profile.entity';
-import { User } from '../users/entities/user.entity';
-import { UpdatePatientDto } from './dto/update-patient.dto';
-import { CreateHealthProfileDto } from './dto/create-health-profile.dto';
+import { Patient } from './entities/patient.entity.js';
+import { HealthProfile } from './entities/health-profile.entity.js';
+import { User } from '../users/entities/user.entity.js';
+import { UpdatePatientDto } from './dto/update-patient.dto.js';
+import { CreateHealthProfileDto } from './dto/create-health-profile.dto.js';
 
 @Injectable()
 export class PatientsService {
@@ -91,5 +91,12 @@ export class PatientsService {
       patient,
     });
     return this.healthProfileRepository.save(profile);
+  }
+
+  async findAll(): Promise<Patient[]> {
+    return this.patientsRepository.find({
+      relations: ['user', 'user.profile', 'healthProfiles'],
+      order: { user: { profile: { lastName: 'ASC' } } },
+    });
   }
 }

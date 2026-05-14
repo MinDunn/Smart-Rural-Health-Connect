@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
-import { ClinicalService } from './clinical.service';
+import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
+import { ClinicalService } from './clinical.service.js';
 
 @Controller('clinical')
 export class ClinicalController {
@@ -33,5 +33,30 @@ export class ClinicalController {
   @Get('latest-prescription/:patientId')
   async getLatestPrescription(@Param('patientId') patientId: string) {
     return this.clinicalService.getLatestPrescription(patientId);
+  }
+
+  @Get('requests/pending')
+  async getPendingRequests() {
+    return this.clinicalService.getPendingRequests();
+  }
+
+  @Get('requests/accepted')
+  async getAcceptedRequests() {
+    return this.clinicalService.getAcceptedRequests();
+  }
+
+  @Patch('appointments/:id/accept')
+  async acceptAppointment(@Param('id') id: string) {
+    return this.clinicalService.acceptAppointment(id);
+  }
+
+  @Get('dashboard/stats')
+  async getDashboardStats() {
+    return this.clinicalService.getDashboardStats();
+  }
+
+  @Get('dashboard/activity')
+  async getRecentActivity() {
+    return this.clinicalService.getRecentActivity();
   }
 }

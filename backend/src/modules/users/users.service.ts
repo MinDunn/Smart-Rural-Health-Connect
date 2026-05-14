@@ -1,9 +1,9 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
-import { Role } from './entities/role.entity';
-import { Profile } from './entities/profile.entity';
+import { User } from './entities/user.entity.js';
+import { Role } from './entities/role.entity.js';
+import { Profile } from './entities/profile.entity.js';
 
 @Injectable()
 export class UsersService {
@@ -97,5 +97,12 @@ export class UsersService {
       Object.assign(user.profile, profileData);
     }
     return this.userRepository.save(user);
+  }
+
+  async getHealthWorkers(): Promise<User[]> {
+    return this.userRepository.find({
+      where: { role: { name: 'health_worker' } },
+      relations: ['profile', 'role'],
+    });
   }
 }

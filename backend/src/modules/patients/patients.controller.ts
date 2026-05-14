@@ -1,11 +1,16 @@
 import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
-import { PatientsService } from './patients.service';
-import { UpdatePatientDto } from './dto/update-patient.dto';
-import { CreateHealthProfileDto } from './dto/create-health-profile.dto';
+import { PatientsService } from './patients.service.js';
+import { UpdatePatientDto } from './dto/update-patient.dto.js';
+import { CreateHealthProfileDto } from './dto/create-health-profile.dto.js';
 
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
+
+  @Get()
+  async getAllPatients() {
+    return this.patientsService.findAll();
+  }
 
   @Get(':userId')
   async getPatient(@Param('userId') userId: string) {

@@ -22,7 +22,7 @@ export class Appointment {
   @JoinColumn({ name: 'doctor_id' })
   doctor: Doctor;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', nullable: true })
   appointmentDate: Date;
 
   @Column({ default: 'pending' })
@@ -45,4 +45,7 @@ export class Appointment {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 }

@@ -24,6 +24,14 @@ import EmergencyScreen from './screens/Emergency';
 import RequestSupportScreen from './screens/RequestSupport';
 import RequestHistoryScreen from './screens/RequestHistory';
 
+// LHW Screens
+import LHWHomeScreen from './screens/LHWHome';
+import PatientDirectoryScreen from './screens/PatientDirectory';
+import VitalsCaptureScreen from './screens/VitalsCapture';
+import ConsultationRoomScreen from './screens/ConsultationRoom';
+import FollowUpMonitorScreen from './screens/FollowUpMonitor';
+import WorkerProfileScreen from './screens/WorkerProfile';
+
 // API
 import { patientApi, clinicalApi } from './lib/api';
 
@@ -36,6 +44,7 @@ export default function App() {
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
   const [user, setUser] = useState<any>(null);
   const [patientId, setPatientId] = useState<string | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
 
   // Profile State
   const [profile, setProfile] = useState<Profile>({
@@ -80,6 +89,13 @@ export default function App() {
         setUser(userData);
         setIsLoggedIn(true);
         
+        // Set default screen based on role if on home
+        if (userData.role?.name === 'health_worker') {
+          setScreen('worker-home');
+        } else {
+          setScreen('home');
+        }
+        
         if (userData.profile) {
           setProfile(prev => ({
             ...prev,
@@ -99,7 +115,7 @@ export default function App() {
 
   // Fetch data from API
   useEffect(() => {
-    if (isLoggedIn && user && user.id) {
+    if (isLoggedIn && user && user.id && user.role?.name === 'citizen') {
       const fetchData = async () => {
         try {
           // Fetch Patient/Profile
@@ -158,7 +174,7 @@ export default function App() {
       };
       fetchData();
     }
-  }, [isLoggedIn, user?.id]);
+  }, [isLoggedIn, user?.id, user?.role?.name]);
 
   const addHistory = useCallback(async (item: HistoryItem) => {
     if (!patientId) return;
@@ -234,7 +250,13 @@ export default function App() {
     localStorage.setItem('srhc_user', JSON.stringify(data.user));
     setUser(data.user);
     setIsLoggedIn(true);
-    setScreen('home');
+    
+    // Set default screen based on role
+    if (data.user?.role?.name === 'health_worker') {
+      setScreen('worker-home');
+    } else {
+      setScreen('home');
+    }
 
     if (data.user?.profile) {
       setProfile(prev => ({
@@ -317,10 +339,11 @@ export default function App() {
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        <Navbar activeScreen={activeScreen} setScreen={handleSetScreen} onLogout={handleLogout} />
+        <Navbar activeScreen={activeScreen} setScreen={handleSetScreen} onLogout={handleLogout} user={user} />
         
         <main className="flex-grow">
           <AnimatePresence mode="wait">
+            {/* Citizen Screens */}
             {activeScreen === 'home' && (
               <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <HomeScreen setScreen={handleSetScreen} profile={profile} />
@@ -389,10 +412,49 @@ export default function App() {
                 <RequestHistoryScreen setScreen={handleSetScreen} patientId={patientId} />
               </motion.div>
             )}
+
+            {/* Health Worker Screens */}
+            {activeScreen === 'worker-home' && (
+              <motion.div key="worker-home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <LHWHomeScreen 
+                  setScreen={handleSetScreen} 
+                  user={user} 
+                  setSelectedAppointment={setSelectedAppointment}
+                />
+              </motion.div>
+            )}
+            {activeScreen === 'patient-directory' && (
+              <motion.div key="patient-directory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <PatientDirectoryScreen setScreen={handleSetScreen} />
+              </motion.div>
+            )}
+            {activeScreen === 'vitals-capture' && (
+              <motion.div key="vitals-capture" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <VitalsCaptureScreen setScreen={handleSetScreen} />
+              </motion.div>
+            )}
+            {activeScreen === 'consultation-room' && (
+              <motion.div key="consultation-room" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <ConsultationRoomScreen 
+                  setScreen={handleSetScreen} 
+                  appointment={selectedAppointment}
+                />
+              </motion.div>
+            )}
+            {activeScreen === 'follow-up-monitor' && (
+              <motion.div key="follow-up-monitor" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <FollowUpMonitorScreen setScreen={handleSetScreen} />
+              </motion.div>
+            )}
+            {activeScreen === 'worker-profile' && (
+              <motion.div key="worker-profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <WorkerProfileScreen setScreen={handleSetScreen} user={user} />
+              </motion.div>
+            )}
           </AnimatePresence>
         </main>
 
-        <BottomNav activeScreen={activeScreen} setScreen={handleSetScreen} />
+        <BottomNav activeScreen={activeScreen} setScreen={handleSetScreen} user={user} />
 
         {/* Floating Toast Notification */}
         <AnimatePresence>

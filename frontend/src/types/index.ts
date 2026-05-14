@@ -1,4 +1,4 @@
-export type Screen = 'home' | 'chat' | 'analysis' | 'status' | 'medical-records' | 'user-profile' | 'login' | 'register' | 'forgot-password' | 'emergency' | 'request-support' | 'request-history';
+export type Screen = 'home' | 'chat' | 'analysis' | 'status' | 'medical-records' | 'user-profile' | 'login' | 'register' | 'forgot-password' | 'emergency' | 'request-support' | 'request-history' | 'worker-home' | 'patient-directory' | 'vitals-capture' | 'consultation-room' | 'follow-up-monitor' | 'worker-profile';
 
 export interface Profile {
   name: string;

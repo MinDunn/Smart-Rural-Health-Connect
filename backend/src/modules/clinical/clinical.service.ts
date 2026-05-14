@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Appointment } from './entities/appointment.entity';
-import { Consultation } from './entities/consultation.entity';
-import { Prescription } from './entities/prescription.entity';
+import { Appointment } from './entities/appointment.entity.js';
+import { Consultation } from './entities/consultation.entity.js';
+import { Prescription } from './entities/prescription.entity.js';
 
 @Injectable()
 export class ClinicalService {
@@ -80,6 +80,47 @@ export class ClinicalService {
         'consultation.appointment.doctor',
       ],
       order: { createdAt: 'DESC' },
+    });
+  }
+
+  async getPendingRequests(): Promise<Appointment[]> {
+    return this.appointmentRepository.find({
+      where: { status: 'pending' },
+      relations: ['patient', 'patient.user', 'patient.user.profile'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async getAcceptedRequests(): Promise<Appointment[]> {
+    return this.appointmentRepository.find({
+      where: { status: 'confirmed' },
+      relations: ['patient', 'patient.user', 'patient.user.profile'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async acceptAppointment(id: string): Promise<Appointment> {
+    const appointment = await this.appointmentRepository.findOne({ where: { id } });
+    if (!appointment) throw new NotFoundException('Appointment not found');
+    appointment.status = 'confirmed';
+    return this.appointmentRepository.save(appointment);
+  }
+
+  async getDashboardStats() {
+    const [pending, confirmed, completed, total] = await Promise.all([
+      this.appointmentRepository.count({ where: { status: 'pending' } }),
+      this.appointmentRepository.count({ where: { status: 'confirmed' } }),
+      this.appointmentRepository.count({ where: { status: 'completed' } }),
+      this.appointmentRepository.count(),
+    ]);
+    return { pending, confirmed, completed, total };
+  }
+
+  async getRecentActivity(): Promise<Appointment[]> {
+    return this.appointmentRepository.find({
+      relations: ['patient', 'patient.user', 'patient.user.profile'],
+      order: { createdAt: 'DESC' },
+      take: 10,
     });
   }
 }

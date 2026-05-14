@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ RUN apk add --no-cache python3 make g++
 
 # Install dependencies first for better caching
 COPY package*.json ./
-RUN npm install
+RUN npm install --no-package-lock
 
 # Copy source code
 COPY . .
