@@ -39,6 +39,12 @@ export class HealthMetric {
   @Column({ default: true })
   isStable: boolean;
 
+  @Column({ default: 'self' })
+  source: string; // self, worker, iot
+
+  @Column({ default: false })
+  isVerified: boolean;
+
   @CreateDateColumn()
   @Index()
   timestamp: Date;

@@ -48,13 +48,61 @@ const VitalsCapture = ({ setScreen }: VitalsCaptureProps) => {
     }, 2000);
   };
 
-  const handleSave = () => {
-    setIsSuccess(true);
-    setTimeout(() => {
-      setIsSuccess(false);
-      setScreen('worker-home');
-    }, 2000);
+  const handleSave = async () => {
+    if (!selectedPatient) return;
+    try {
+      const { iotApi } = await import('../lib/api');
+      const metrics = [
+        { type: 'blood_pressure', value: `${vitals.bp_sys}/${vitals.bp_dia}`, unit: 'mmHg' },
+        { type: 'blood_sugar', value: parseFloat(vitals.sugar) || 0, unit: 'mmol/L' },
+        { type: 'heart_rate', value: parseFloat(vitals.hr) || 0, unit: 'bpm' },
+        { type: 'spo2', value: parseFloat(vitals.spo2) || 0, unit: '%' }
+      ];
+
+      for (const m of metrics) {
+        if (!m.value) continue;
+        await iotApi.saveMetric({
+          patient: { id: selectedPatient.id },
+          type: m.type,
+          value: typeof m.value === 'string' ? parseFloat(m.value.split('/')[0]) : m.value,
+          unit: m.unit,
+          source: 'worker',
+          isVerified: true,
+          isStable: true,
+          status: 'stable'
+        });
+      }
+
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsSuccess(false);
+        setScreen('worker-home');
+      }, 2000);
+    } catch (error) {
+      console.error('Error saving vitals:', error);
+      alert('Có lỗi xảy ra khi lưu chỉ số.');
+    }
   };
+
+  const searchPatient = async (query: string) => {
+    if (query.length < 2) return;
+    try {
+      const { patientApi } = await import('../lib/api');
+      const res = await patientApi.getAllPatients();
+      const found = res.data.find((p: any) => 
+        `${p.user?.profile?.lastName} ${p.user?.profile?.firstName}`.toLowerCase().includes(query.toLowerCase())
+      );
+      if (found) {
+        setSelectedPatient({
+          id: found.id,
+          name: `${found.user?.profile?.lastName} ${found.user?.profile?.firstName}`,
+          age: found.user?.profile?.dob ? new Date().getFullYear() - new Date(found.user.profile.dob).getFullYear() : '?'
+        });
+      }
+    } catch (e) {
+      console.error('Search error:', e);
+    }
+  }
 
   return (
     <motion.div 
@@ -92,11 +140,7 @@ const VitalsCapture = ({ setScreen }: VitalsCaptureProps) => {
                   placeholder="Nhập tên hoặc mã định danh bệnh nhân..."
                   className="w-full bg-gray-50 border-2 border-transparent rounded-[24px] py-6 px-16 text-lg focus:bg-white focus:border-emerald-deep transition-all shadow-inner outline-none"
                   onFocus={() => {}} // Could show dropdown
-                  onChange={(e) => {
-                    if (e.target.value.toLowerCase().includes('nguyễn văn a')) {
-                       setSelectedPatient({ id: '1', name: 'Nguyễn Văn A', age: 72 });
-                    }
-                  }}
+                  onChange={(e) => searchPatient(e.target.value)}
                 />
              </div>
            ) : (

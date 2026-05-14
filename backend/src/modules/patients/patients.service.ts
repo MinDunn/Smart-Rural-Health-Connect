@@ -95,7 +95,8 @@ export class PatientsService {
 
   async findAll(): Promise<Patient[]> {
     return this.patientsRepository.find({
-      relations: ['user', 'user.profile', 'healthProfiles'],
+      where: { user: { role: { name: 'citizen' } } },
+      relations: ['user', 'user.profile', 'user.role', 'healthProfiles'],
       order: { user: { profile: { lastName: 'ASC' } } },
     });
   }

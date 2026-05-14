@@ -1,9 +1,9 @@
-FROM node:24-alpine
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-# Install build tools for native modules (like bcrypt)
-RUN apk add --no-cache python3 make g++
+# Install build tools for native modules
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies first for better caching
 COPY package*.json ./

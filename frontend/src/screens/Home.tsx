@@ -138,9 +138,9 @@ const HomeScreen = ({ setScreen, profile }: HomeProps) => (
           color: 'text-amber-600'
         },
         { 
-          id: 'status', 
-          title: 'Hồ sơ sức khỏe', 
-          desc: 'Xem lại lịch sử khám bệnh, đơn thuốc và các chỉ số sức khỏe.',
+          id: 'request-history', 
+          title: 'Lịch sử & Kết quả', 
+          desc: 'Xem lại các kết luận, đơn thuốc và dặn dò từ cán bộ y tế cơ sở.',
           icon: <ClipboardList size={32} />,
           bg: 'glass hover:bg-house-green hover:text-white',
           iconBg: 'bg-house-green/5 text-house-green group-hover:bg-white/20 group-hover:text-white',

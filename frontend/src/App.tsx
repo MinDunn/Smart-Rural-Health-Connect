@@ -367,6 +367,7 @@ export default function App() {
                   bmi={bmi} 
                   bmiStatus={bmiStatus}
                   patientId={patientId}
+                  userId={user?.id}
                 />
               </motion.div>
             )}

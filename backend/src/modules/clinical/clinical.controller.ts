@@ -59,4 +59,19 @@ export class ClinicalController {
   async getRecentActivity() {
     return this.clinicalService.getRecentActivity();
   }
+
+  @Post('appointments/:id/complete')
+  async completeConsultation(@Param('id') id: string, @Body() data: any) {
+    return this.clinicalService.completeConsultation(id, data);
+  }
+
+  @Get('appointments/:id/result')
+  async getConsultationResult(@Param('id') id: string) {
+    return this.clinicalService.getConsultationResult(id);
+  }
+
+  @Get('patients/:id/latest-consultation')
+  async getLatestConsultation(@Param('id') id: string) {
+    return this.clinicalService.getLatestConsultation(id);
+  }
 }

@@ -8,6 +8,8 @@ import {
 } from 'typeorm';
 import { Patient } from '../../patients/entities/patient.entity';
 import { Doctor } from '../../healthcare/entities/doctor.entity';
+import { Consultation } from './consultation.entity';
+import { OneToOne } from 'typeorm';
 
 @Entity('appointments')
 export class Appointment {
@@ -42,6 +44,9 @@ export class Appointment {
 
   @Column({ default: false })
   isThreeWayConsultation: boolean;
+
+  @OneToOne(() => Consultation, (c) => c.appointment)
+  consultation: Consultation;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -29,6 +29,9 @@ export class HealthProfile {
   @Column({ type: 'text', nullable: true })
   chronicDiseases: string;
 
+  @Column({ default: 'self' })
+  source: string; // self, worker
+
   @CreateDateColumn()
   createdAt: Date;
 }

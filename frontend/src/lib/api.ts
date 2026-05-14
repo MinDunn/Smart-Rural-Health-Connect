@@ -43,6 +43,9 @@ export const clinicalApi = {
   acceptRequest: (id: string) => api.patch(`/clinical/appointments/${id}/accept`),
   getDashboardStats: () => api.get('/clinical/dashboard/stats'),
   getRecentActivity: () => api.get('/clinical/dashboard/activity'),
+  completeConsultation: (id: string, data: any) => api.post(`/clinical/appointments/${id}/complete`, data),
+  getConsultationResult: (id: string) => api.get(`/clinical/appointments/${id}/result`),
+  getLatestConsultation: (patientId: string) => api.get(`/clinical/patients/${patientId}/latest-consultation`),
 };
 
 export const iotApi = {
