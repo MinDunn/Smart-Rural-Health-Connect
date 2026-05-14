@@ -135,6 +135,7 @@ export class AuthService {
         email: user.email,
         profile: user.profile,
         role: user.role,
+        patientId: user.patient?.id,
       },
     };
   }

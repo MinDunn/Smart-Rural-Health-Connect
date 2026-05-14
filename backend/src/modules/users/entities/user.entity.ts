@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Role } from './role.entity';
 import { Profile } from './profile.entity';
+import { Patient } from '../../patients/entities/patient.entity';
 
 @Entity('users')
 export class User {
@@ -38,4 +39,7 @@ export class User {
   @OneToOne(() => Profile, (profile) => profile.user, { cascade: true })
   @JoinColumn({ name: 'profile_id' })
   profile: Profile;
+
+  @OneToOne(() => Patient, (patient) => patient.user)
+  patient: Patient;
 }

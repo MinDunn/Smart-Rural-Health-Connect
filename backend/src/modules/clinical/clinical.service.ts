@@ -26,6 +26,18 @@ export class ClinicalService {
     });
   }
 
+  async getUpcomingAppointments(patientId: string): Promise<Appointment[]> {
+    return this.appointmentRepository.find({
+      where: { 
+        patient: { id: patientId },
+        status: 'scheduled'
+      },
+      relations: ['doctor', 'doctor.user', 'doctor.user.profile'],
+      order: { appointmentDate: 'ASC' },
+      take: 5,
+    });
+  }
+
   async createAppointment(data: any): Promise<Appointment> {
     const appointment = this.appointmentRepository.create(data as Appointment);
     const saved = await this.appointmentRepository.save(appointment);

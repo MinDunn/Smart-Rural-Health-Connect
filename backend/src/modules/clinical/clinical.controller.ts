@@ -10,6 +10,11 @@ export class ClinicalController {
     return this.clinicalService.getPatientHistory(patientId);
   }
 
+  @Get('appointments/upcoming/:patientId')
+  async getUpcoming(@Param('patientId') patientId: string) {
+    return this.clinicalService.getUpcomingAppointments(patientId);
+  }
+
   @Post('appointments')
   async createAppointment(@Body() data: any) {
     return this.clinicalService.createAppointment(data);
