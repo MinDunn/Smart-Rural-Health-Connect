@@ -9,10 +9,19 @@ Dự án được xây dựng theo kiến trúc **Modular Monolith**, cho phép 
 ### Tech Stack:
 - **Frontend**: Expo (React Native) cho Mobile, Next.js cho Web Portal.
 - **Backend**: NestJS (Node.js).
-- **Database**: PostgreSQL (Dữ liệu chính), Redis (Cache/Event).
+- **AI Engine**: Google Gemini (v2.0 Flash & v1.5 Flash) cho tư vấn y tế.
+- **Database**: PostgreSQL (hỗ trợ pgvector cho RAG), Redis (Cache/Event).
 - **IoT**: EMQX (MQTT Broker).
 - **Hạ tầng**: Docker & Kubernetes.
 - **Real-time**: WebRTC & Socket.io.
+
+## ✨ Tính năng Đột phá: Trợ lý Bác sĩ AI (Consultation 360°)
+Hệ thống SRHC tích hợp một trợ lý ảo y tế mạnh mẽ, vượt xa các chatbot thông thường nhờ khả năng phân tích dữ liệu đa chiều:
+- **Tư vấn Cá nhân hóa**: AI tự động truy cập hồ sơ bệnh nhân (nhóm máu, tiền sử bệnh lý, dị ứng) để đưa ra lời khuyên chính xác.
+- **Tích hợp IoT Real-time**: Phân tích trực tiếp các chỉ số nhịp tim, SpO2 từ thiết bị đeo để đưa ra cảnh báo kịp thời.
+- **Bối cảnh Lâm sàng**: Đọc hiểu các chẩn đoán cũ và đơn thuốc hiện tại của người dùng.
+- **Quy trình Thăm khám chuyên nghiệp**: AI biết hỏi ngược lại người dùng để thu thập đủ triệu chứng trước khi đưa ra nhận định sơ bộ.
+- **Kiến trúc RAG Ready**: Hạ tầng cơ sở dữ liệu vector đã sẵn sàng để tích hợp kho tri thức y khoa chuyên sâu.
 
 ## 📁 Cấu trúc Thư mục
 ```text

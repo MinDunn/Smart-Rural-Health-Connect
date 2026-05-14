@@ -10,6 +10,7 @@ import { IotModule } from './modules/iot/iot.module';
 import { ClinicalModule } from './modules/clinical/clinical.module';
 import { SystemModule } from './modules/system/system.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { AuthModule } from './modules/auth/auth.module';
     ClinicalModule,
     SystemModule,
     AuthModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
