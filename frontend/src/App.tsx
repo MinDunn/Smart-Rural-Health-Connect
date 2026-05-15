@@ -341,7 +341,7 @@ export default function App() {
       <div className="relative z-10 flex flex-col min-h-screen">
         <Navbar activeScreen={activeScreen} setScreen={handleSetScreen} onLogout={handleLogout} user={user} />
         
-        <main className="flex-grow">
+        <main className="flex-grow pt-[80px]">
           <AnimatePresence mode="wait">
             {/* Citizen Screens */}
             {activeScreen === 'home' && (
@@ -421,6 +421,7 @@ export default function App() {
                   setScreen={handleSetScreen} 
                   user={user} 
                   setSelectedAppointment={setSelectedAppointment}
+                  showToast={showToast}
                 />
               </motion.div>
             )}

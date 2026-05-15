@@ -24,6 +24,7 @@ const StatusScreen = ({ profile, setProfile, bmi, bmiStatus, patientId, userId }
   const [metricsHistory, setMetricsHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +46,11 @@ const StatusScreen = ({ profile, setProfile, bmi, bmiStatus, patientId, userId }
     fetchData();
   }, [patientId]);
 
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
   const handleUpdateMetrics = async () => {
     if (!patientId) return;
     try {
@@ -55,10 +61,18 @@ const StatusScreen = ({ profile, setProfile, bmi, bmiStatus, patientId, userId }
         { type: 'spo2', value: profile.spo2, unit: '%' }
       ];
 
+      let savedCount = 0;
+
       for (const m of metrics) {
         if (!m.value || m.value === '--' || m.value === '--/--') continue;
         const numericValue = typeof m.value === 'string' ? parseFloat(m.value.split('/')[0]) : m.value;
         if (isNaN(numericValue)) continue;
+
+        // Only save if value changed from last recorded
+        const latestForType = metricsHistory.find(h => h.type === m.type);
+        if (latestForType && parseFloat(latestForType.value) === numericValue) {
+          continue;
+        }
 
         await iotApi.saveMetric({
           patient: { id: patientId },
@@ -70,6 +84,7 @@ const StatusScreen = ({ profile, setProfile, bmi, bmiStatus, patientId, userId }
           isStable: true,
           status: 'stable'
         });
+        savedCount++;
       }
 
       // Also update height/weight in HealthProfile
@@ -82,13 +97,17 @@ const StatusScreen = ({ profile, setProfile, bmi, bmiStatus, patientId, userId }
         });
       }
 
-      alert('Đã cập nhật chỉ số sức khỏe của ông bà!');
-      // Refresh
-      const metricsRes = await iotApi.getMetrics(patientId);
-      setMetricsHistory(metricsRes.data);
+      if (savedCount > 0) {
+        showToast('Đã cập nhật chỉ số sức khỏe của ông bà!');
+        // Refresh
+        const metricsRes = await iotApi.getMetrics(patientId);
+        setMetricsHistory(metricsRes.data);
+      } else {
+        showToast('Không có chỉ số nào thay đổi.');
+      }
     } catch (error) {
       console.error('Error saving metrics:', error);
-      alert('Có lỗi xảy ra khi cập nhật chỉ số.');
+      showToast('Có lỗi xảy ra khi cập nhật chỉ số.', 'error');
     }
   };
 
@@ -108,6 +127,28 @@ const StatusScreen = ({ profile, setProfile, bmi, bmiStatus, patientId, userId }
       animate={{ opacity: 1 }} 
       className="max-w-7xl mx-auto px-6 md:px-12 py-12 pb-32 space-y-12"
     >
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 20, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none"
+          >
+            <div className={cn(
+              "px-8 py-5 rounded-[32px] shadow-2xl flex items-center gap-4 backdrop-blur-xl border pointer-events-auto",
+              toast.type === 'success' 
+                ? "bg-emerald-deep/90 text-white border-white/20" 
+                : "bg-red-600/90 text-white border-white/20"
+            )}>
+              {toast.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+              <span className="text-lg font-black tracking-tight">{toast.message}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Banner Tình Trạng Dynamic */}
       <div className="bg-emerald-deep rounded-[40px] p-8 md:p-12 mb-12 relative overflow-hidden shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -266,17 +307,10 @@ const StatusScreen = ({ profile, setProfile, bmi, bmiStatus, patientId, userId }
                  <p className="text-sm text-gray-400 font-medium">Theo dõi sự thay đổi của các chỉ số qua thời gian.</p>
               </div>
            </div>
-           <button 
-             onClick={() => setShowAllHistory(!showAllHistory)}
-             className="text-starbucks-green font-black text-sm uppercase tracking-widest flex items-center gap-2 hover:opacity-70 transition-opacity"
-           >
-              {showAllHistory ? 'Thu gọn' : 'Xem tất cả'}
-              {showAllHistory ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-           </button>
         </div>
 
-        <div className="space-y-4">
-           {metricsHistory.slice(0, showAllHistory ? undefined : 5).map((log, idx) => (
+        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar">
+           {metricsHistory.map((log, idx) => (
              <div key={idx} className="flex items-center justify-between p-6 rounded-3xl border border-gray-50 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-6">
                    <div className={cn(

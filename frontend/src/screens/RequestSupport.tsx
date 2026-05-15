@@ -4,7 +4,8 @@ import {
   ArrowLeft, Send, Image as ImageIcon, X, AlertCircle, ShieldCheck, 
   CheckCircle2, WifiOff, PhoneCall, Stethoscope, ClipboardList, 
   Upload, Calendar, Clock, MapPin, Info, Activity, Pill, Camera,
-  Mic, Volume2, Square, Play, Pause, Trash2, History as HistoryIcon
+  Mic, Volume2, Square, Play, Pause, Trash2, History as HistoryIcon,
+  Loader2
 } from 'lucide-react';
 import { Prescription, Screen } from '../types';
 import { cn } from '../lib/utils';
@@ -25,6 +26,7 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
   const [duration, setDuration] = useState('today');
   const [daysCount, setDaysCount] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [otherSymptom, setOtherSymptom] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [consent, setConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,10 +43,10 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
   
   // Track unsaved changes
   useEffect(() => {
-    const isDirty = reason !== '' || medication !== '' || selectedSymptoms.length > 0 || images.length > 0 || audioUrl !== null;
+    const isDirty = reason !== '' || medication !== '' || selectedSymptoms.length > 0 || otherSymptom !== '' || images.length > 0 || audioUrl !== null;
     setHasUnsavedChanges(isDirty);
     return () => setHasUnsavedChanges(false);
-  }, [reason, medication, selectedSymptoms, images, audioUrl, setHasUnsavedChanges]);
+  }, [reason, medication, selectedSymptoms, otherSymptom, images, audioUrl, setHasUnsavedChanges]);
 
   const supportTypes = [
     { id: 'general', label: 'Tư vấn chung', desc: 'Hỏi đáp sức khỏe', icon: Stethoscope, color: 'bg-blue-500', theme: 'blue' },
@@ -53,20 +55,20 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
   ];
 
   const symptoms = [
-    { id: 'fever', label: 'Sốt / Nóng', icon: '🔥' },
-    { id: 'headache', label: 'Đau đầu', icon: '🧠' },
-    { id: 'dizzy', label: 'Chóng mặt', icon: '🌀' },
-    { id: 'cough', label: 'Ho / Đau họng', icon: '🗣️' },
-    { id: 'stomach', label: 'Đau bụng', icon: '🤢' },
-    { id: 'chest', label: 'Đau ngực', icon: '🫀' },
-    { id: 'breath', label: 'Khó thở', icon: '🌬️' },
-    { id: 'fatigue', label: 'Mệt mỏi', icon: '😫' },
-    { id: 'joint', label: 'Đau khớp / Lưng', icon: '🦴' },
-    { id: 'insomnia', label: 'Mất ngủ', icon: '😴' },
-    { id: 'numb', label: 'Tê bì tay chân', icon: '🦶' },
-    { id: 'skin', label: 'Mẩn ngứa', icon: '🩹' },
-    { id: 'bp', label: 'Huyết áp cao', icon: '📈' },
-    { id: 'sugar', label: 'Đường huyết cao', icon: '🍭' },
+    { id: 'fever', label: 'Sốt / Nóng' },
+    { id: 'headache', label: 'Đau đầu' },
+    { id: 'dizzy', label: 'Chóng mặt' },
+    { id: 'cough', label: 'Ho / Đau họng' },
+    { id: 'stomach', label: 'Đau bụng' },
+    { id: 'chest', label: 'Đau ngực' },
+    { id: 'breath', label: 'Khó thở' },
+    { id: 'fatigue', label: 'Mệt mỏi' },
+    { id: 'joint', label: 'Đau khớp / Lưng' },
+    { id: 'insomnia', label: 'Mất ngủ' },
+    { id: 'numb', label: 'Tê bì tay chân' },
+    { id: 'skin', label: 'Mẩn ngứa' },
+    { id: 'bp', label: 'Huyết áp cao' },
+    { id: 'sugar', label: 'Đường huyết cao' },
   ];
 
   const durationOptions = [
@@ -140,16 +142,40 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'srhc_uploads');
+    
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/ddftccski/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error('Error uploading to Cloudinary:', error);
+      throw error;
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      Array.from(files).forEach((file: File) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImages(prev => [...prev, reader.result as string]);
-        };
-        reader.readAsDataURL(file);
-      });
+      setIsUploading(true);
+      try {
+        const fileList = Array.from(files) as File[];
+        const uploadPromises = fileList.map(file => uploadToCloudinary(file));
+        const urls = await Promise.all(uploadPromises);
+        setImages(prev => [...prev, ...urls]);
+      } catch (error) {
+        alert('Có lỗi khi tải ảnh lên. Vui lòng thử lại.');
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -159,7 +185,7 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
       return;
     }
     
-    if (supportType !== 'prescription' && selectedSymptoms.length === 0 && !reason) {
+    if (supportType !== 'prescription' && selectedSymptoms.length === 0 && !reason && !otherSymptom) {
       alert('Vui lòng chọn triệu chứng hoặc mô tả tình trạng của ông bà.');
       return;
     }
@@ -168,9 +194,16 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
       ? `${daysCount} ngày` 
       : (durationOptions.find(d => d.id === duration)?.label || 'Không xác định');
 
+    const symptomsList = [...selectedSymptoms];
+    if (otherSymptom) symptomsList.push(`Khác: ${otherSymptom}`);
+
     const requestData = {
       patient: { id: patientId },
-      reason: `[${supportType.toUpperCase()}] ${supportType === 'prescription' ? 'YÊU CẦU CẤP ĐƠN THUỐC' : `Triệu chứng: ${selectedSymptoms.join(', ')}`}. Thời gian: ${durationText}. Thuốc đang dùng: ${medication}. Chi tiết: ${reason}`,
+      reason: `Loại hỗ trợ: ${supportType.toUpperCase()}\n` +
+              `Triệu chứng: ${symptomsList.join(', ')}\n` +
+              `Thời gian: ${durationText}\n` +
+              `Thuốc đang dùng: ${medication}\n` +
+              `Chi tiết: ${reason}`,
       attachments: images,
       consentGiven: consent,
       urgency: supportType === 'urgent' ? 'high' : 'normal',
@@ -375,6 +408,7 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
                     setSupportType(type.id as any);
                     if (type.id === 'prescription') {
                       setSelectedSymptoms([]);
+                      setOtherSymptom('');
                       setDuration('');
                       setDaysCount('');
                     }
@@ -448,24 +482,132 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
                         key={s.id}
                         onClick={() => toggleSymptom(s.label)}
                         className={cn(
-                          "px-6 py-4 rounded-2xl border-2 text-sm font-bold transition-all flex items-center gap-3",
+                          "px-6 py-4 rounded-2xl border-2 text-sm font-bold transition-all flex items-center",
                           selectedSymptoms.includes(s.label) 
                             ? "bg-starbucks-green border-starbucks-green text-white shadow-lg shadow-green-100 scale-105" 
                             : "bg-white border-gray-100 text-gray-500 hover:border-starbucks-green/30 hover:text-starbucks-green"
                         )}
                       >
-                        <span className="text-2xl">{s.icon}</span>
                         {s.label}
                       </button>
                     ))}
+                    
+                    {/* Input cho triệu chứng khác */}
+                    <div className="w-full mt-4">
+                       <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Triệu chứng khác (nếu có)</p>
+                       <input 
+                         type="text"
+                         value={otherSymptom}
+                         onChange={(e) => setOtherSymptom(e.target.value)}
+                         placeholder="Ví dụ: Đau nhức mắt, rát lưỡi..."
+                         className="w-full bg-gray-50/50 border-2 border-gray-50 rounded-2xl py-4 px-6 text-lg focus:bg-white focus:ring-4 focus:ring-starbucks-green/5 focus:border-starbucks-green transition-all outline-none"
+                       />
+                    </div>
                   </div>
                 </section>
 
-                {/* Card 3: Duration & Meds */}
-                <section className="bg-white rounded-[48px] p-10 border border-gray-50 shadow-xl shadow-gray-200/40 space-y-10">
+                {/* Card 3: Description & Images (Moved to position 3) */}
+                <section className="bg-white rounded-[48px] p-10 border border-gray-50 shadow-xl shadow-gray-200/40 space-y-8">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-green-light rounded-xl flex items-center justify-center font-black text-starbucks-green shadow-sm">3</div>
+                      <h2 className="text-2xl font-bold text-house-green">Mô tả thêm & Gửi ảnh</h2>
+                    </div>
+                    <button 
+                      onClick={() => handleSpeak("Ông bà hãy kể chi tiết hơn về tình trạng sức khỏe, hoặc nhấn nút micro để ghi âm giọng nói của mình.")}
+                      className="w-12 h-12 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center hover:bg-starbucks-green hover:text-white transition-all shadow-sm"
+                    >
+                      <Volume2 size={24} />
+                    </button>
+                  </div>
+                    <div className="relative group">
+                    <textarea
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      placeholder={getPlaceholder()}
+                      className="w-full bg-gray-50/50 border-2 border-gray-50 rounded-[32px] p-8 text-lg focus:bg-white focus:ring-4 focus:ring-starbucks-green/5 focus:border-starbucks-green transition-all min-h-[180px] resize-none outline-none shadow-inner pr-24"
+                    />
+                    <div className="absolute top-6 right-6 flex flex-col gap-3">
+                      {!isRecording ? (
+                        <button
+                          onClick={startRecording}
+                          className="w-14 h-14 bg-blue-500 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-blue-600 transition-all active:scale-95"
+                          title="Ghi âm giọng nói"
+                        >
+                          <Mic size={28} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={stopRecording}
+                          className="w-14 h-14 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg animate-pulse"
+                          title="Dừng ghi âm"
+                        >
+                          <Square size={28} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {audioUrl && (
+                    <div className="bg-blue-50 p-6 rounded-[24px] border border-blue-100 flex items-center justify-between gap-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-blue-500 text-white rounded-xl flex items-center justify-center">
+                          <Mic size={24} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-blue-400 uppercase tracking-widest">Đã ghi âm giọng nói</p>
+                          <p className="text-sm font-bold text-blue-900 italic">Bác sĩ sẽ nghe thấy lời nhắn này của ông bà.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <audio src={audioUrl} controls className="h-10 w-48" />
+                        <button 
+                          onClick={() => setAudioUrl(null)}
+                          className="w-10 h-10 bg-white text-red-500 rounded-xl flex items-center justify-center hover:bg-red-50 shadow-sm"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Hình ảnh đính kèm ({images.length})</p>
+                        <p className="text-[11px] text-starbucks-green font-medium italic">Ông bà hãy chụp: Vùng bị đau, ảnh vỏ thuốc đang uống hoặc đơn thuốc gần nhất.</p>
+                      </div>
+                      <label className={cn(
+                        "flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-black cursor-pointer transition-all shadow-sm",
+                        isUploading ? "bg-gray-100 text-gray-400 cursor-wait" : "bg-green-light text-starbucks-green hover:bg-starbucks-green hover:text-white"
+                      )}>
+                        {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+                        {isUploading ? "ĐANG TẢI..." : "CHỌN ẢNH TỪ MÁY"}
+                        <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+                      {images.map((img, i) => (
+                        <div key={i} className="relative aspect-square group">
+                          <img src={img} onClick={() => setPreviewImage(img)} className="w-full h-full object-cover rounded-[20px] border border-gray-100 cursor-pointer shadow-md transition-transform group-hover:scale-105" alt="Symptom" />
+                          <button onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2 shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"><X size={14} /></button>
+                        </div>
+                      ))}
+                      <label className={cn(
+                        "aspect-square border-3 border-dashed rounded-[20px] flex flex-col items-center justify-center transition-all bg-gray-50/30",
+                        isUploading ? "border-gray-200 text-gray-200 cursor-wait" : "border-gray-100 text-gray-300 hover:border-starbucks-green/30 hover:text-starbucks-green/30 cursor-pointer"
+                      )}>
+                        {isUploading ? <Loader2 size={24} className="animate-spin" /> : <ImageIcon size={28} />}
+                        <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
+                      </label>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Card 4: Duration & Meds (Moved to position 4) */}
+                <section className="bg-white rounded-[48px] p-10 border border-gray-50 shadow-xl shadow-gray-200/40 space-y-10">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-green-light rounded-xl flex items-center justify-center font-black text-starbucks-green shadow-sm">4</div>
                       <h2 className="text-2xl font-bold text-house-green">Thời gian & Tiền sử dùng thuốc</h2>
                     </div>
                     <button 
@@ -621,14 +763,17 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
                             <Camera className="text-orange-500" size={20} />
-                            <p className="text-sm font-black text-house-green uppercase tracking-tight">Chụp ảnh lọ thuốc cũ</p>
+                            <p className="text-sm font-black text-house-green uppercase tracking-tight">Chụp ảnh thuốc hoặc đơn thuốc</p>
                           </div>
-                          <p className="text-xs text-gray-400 italic">Việc chụp ảnh thực tế sẽ giúp bác sĩ an tâm duyệt đơn nhanh hơn.</p>
+                          <p className="text-xs text-gray-400 italic">Chụp ảnh thuốc đang uống hoặc đơn thuốc cũ sẽ giúp bác sĩ duyệt đơn nhanh hơn.</p>
                         </div>
-                        <label className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-orange-500 text-white rounded-2xl text-base font-black cursor-pointer hover:bg-orange-600 transition-all shadow-lg active:scale-95">
-                          <Camera size={24} />
-                          CHỤP / TẢI ẢNH
-                          <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+                        <label className={cn(
+                          "w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-base font-black cursor-pointer transition-all shadow-lg active:scale-95",
+                          isUploading ? "bg-gray-400 text-white cursor-wait" : "bg-orange-500 text-white hover:bg-orange-600"
+                        )}>
+                          {isUploading ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+                          {isUploading ? "ĐANG TẢI..." : "CHỌN / TẢI ẢNH"}
+                          <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
                         </label>
                       </div>
                     </div>
@@ -637,96 +782,6 @@ const RequestSupportScreen = ({ setScreen, patientId, setHasUnsavedChanges, show
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Card 4: Description & Images (Only shown for non-prescription as it's handled above) */}
-          {supportType !== 'prescription' && (
-            <section className="bg-white rounded-[48px] p-10 border border-gray-50 shadow-xl shadow-gray-200/40 space-y-8">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-green-light rounded-xl flex items-center justify-center font-black text-starbucks-green shadow-sm">4</div>
-                  <h2 className="text-2xl font-bold text-house-green">Mô tả thêm & Gửi ảnh</h2>
-                </div>
-                <button 
-                  onClick={() => handleSpeak("Ông bà hãy kể chi tiết hơn về tình trạng sức khỏe, hoặc nhấn nút micro để ghi âm giọng nói của mình.")}
-                  className="w-12 h-12 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center hover:bg-starbucks-green hover:text-white transition-all shadow-sm"
-                >
-                  <Volume2 size={24} />
-                </button>
-              </div>
-                <div className="relative group">
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder={getPlaceholder()}
-                  className="w-full bg-gray-50/50 border-2 border-gray-50 rounded-[32px] p-8 text-lg focus:bg-white focus:ring-4 focus:ring-starbucks-green/5 focus:border-starbucks-green transition-all min-h-[180px] resize-none outline-none shadow-inner pr-24"
-                />
-                <div className="absolute top-6 right-6 flex flex-col gap-3">
-                  {!isRecording ? (
-                    <button
-                      onClick={startRecording}
-                      className="w-14 h-14 bg-blue-500 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-blue-600 transition-all active:scale-95"
-                      title="Ghi âm giọng nói"
-                    >
-                      <Mic size={28} />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={stopRecording}
-                      className="w-14 h-14 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg animate-pulse"
-                      title="Dừng ghi âm"
-                    >
-                      <Square size={28} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {audioUrl && (
-                <div className="bg-blue-50 p-6 rounded-[24px] border border-blue-100 flex items-center justify-between gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-500 text-white rounded-xl flex items-center justify-center">
-                      <Mic size={24} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-blue-400 uppercase tracking-widest">Đã ghi âm giọng nói</p>
-                      <p className="text-sm font-bold text-blue-900 italic">Bác sĩ sẽ nghe thấy lời nhắn này của ông bà.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <audio src={audioUrl} controls className="h-10 w-48" />
-                    <button 
-                      onClick={() => setAudioUrl(null)}
-                      className="w-10 h-10 bg-white text-red-500 rounded-xl flex items-center justify-center hover:bg-red-50 shadow-sm"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              )}
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Hình ảnh đính kèm ({images.length})</p>
-                  <label className="flex items-center gap-2 px-6 py-3 bg-green-light text-starbucks-green rounded-2xl text-sm font-black cursor-pointer hover:bg-starbucks-green hover:text-white transition-all shadow-sm">
-                    <Upload size={18} />
-                    CHỌN ẢNH TỪ MÁY
-                    <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
-                  </label>
-                </div>
-                <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                  {images.map((img, i) => (
-                    <div key={i} className="relative aspect-square group">
-                      <img src={img} onClick={() => setPreviewImage(img)} className="w-full h-full object-cover rounded-[20px] border border-gray-100 cursor-pointer shadow-md transition-transform group-hover:scale-105" alt="Symptom" />
-                      <button onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2 shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110"><X size={14} /></button>
-                    </div>
-                  ))}
-                  <label className="aspect-square border-3 border-dashed border-gray-100 rounded-[20px] flex flex-col items-center justify-center text-gray-300 hover:border-starbucks-green/30 hover:text-starbucks-green/30 cursor-pointer transition-all bg-gray-50/30">
-                    <ImageIcon size={28} />
-                    <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
-                  </label>
-                </div>
-              </div>
-            </section>
-          )}
 
           {/* Images for Prescription (if any images uploaded in adaptive card) */}
           {supportType === 'prescription' && images.length > 0 && (

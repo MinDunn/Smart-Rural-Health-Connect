@@ -32,7 +32,7 @@ const Navbar = ({ activeScreen, setScreen, onLogout, user }: NavbarProps) => {
   ];
 
   return (
-    <header className="glass sticky top-0 z-50 h-[80px] flex items-center justify-between px-6 md:px-12 border-b border-white/20">
+    <header className="glass fixed top-0 left-0 right-0 z-50 h-[80px] flex items-center justify-between px-6 md:px-12 border-b border-white/20">
       <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setScreen(isWorker ? 'worker-home' : 'home')}>
         <div className="w-12 h-12 bg-emerald-deep rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform">
           <HeartPulse className="text-white w-7 h-7" />

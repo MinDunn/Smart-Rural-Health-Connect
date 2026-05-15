@@ -33,7 +33,19 @@ export class Appointment {
   @Column({ type: 'text', nullable: true })
   reason: string;
 
-  @Column({ type: 'simple-array', nullable: true })
+  @Column({ 
+    type: 'text', 
+    nullable: true,
+    transformer: {
+      to: (value: string[]) => JSON.stringify(value || []),
+      from: (value: any) => {
+        if (typeof value !== 'string') return value || [];
+        if (value === 'undefined' || !value) return [];
+        try { return JSON.parse(value); }
+        catch (e) { return value.split(',').filter(Boolean); }
+      }
+    }
+  })
   attachments: string[];
 
   @Column({ default: 'normal' })

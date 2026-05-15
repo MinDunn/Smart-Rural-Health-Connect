@@ -110,17 +110,35 @@ export class ClinicalService {
     });
   }
 
-  async acceptAppointment(id: string): Promise<Appointment> {
+  async updateAppointmentStatus(id: string, status: string): Promise<Appointment> {
     const appointment = await this.findAppointmentById(id);
-    appointment.status = 'confirmed';
+    appointment.status = status;
     return this.appointmentRepository.save(appointment);
+  }
+
+  async acceptAppointment(id: string): Promise<Appointment> {
+    return this.updateAppointmentStatus(id, 'confirmed');
+  }
+
+  async rejectAppointment(id: string): Promise<Appointment> {
+    return this.updateAppointmentStatus(id, 'rejected');
   }
 
   async getDashboardStats(): Promise<any> {
     const total = await this.appointmentRepository.count();
     const pending = await this.appointmentRepository.count({ where: { status: 'pending' } });
+    const confirmed = await this.appointmentRepository.count({ where: { status: 'confirmed' } });
     const completed = await this.appointmentRepository.count({ where: { status: 'completed' } });
-    return { total, pending, completed };
+    const rejected = await this.appointmentRepository.count({ where: { status: 'rejected' } });
+    return { total, pending, confirmed, completed, rejected };
+  }
+
+  async getRejectedRequests(): Promise<Appointment[]> {
+    return this.appointmentRepository.find({
+      where: { status: 'rejected' },
+      relations: ['patient', 'patient.user', 'patient.user.profile'],
+      order: { updatedAt: 'DESC' },
+    });
   }
 
   async getRecentActivity(): Promise<any[]> {

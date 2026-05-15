@@ -45,9 +45,25 @@ export class ClinicalController {
     return this.clinicalService.getAcceptedRequests();
   }
 
+  @Get('requests/rejected')
+  async getRejectedRequests() {
+    return this.clinicalService.getRejectedRequests();
+  }
+
+  @Patch('appointments/:id/status')
+  async updateStatus(@Param('id') id: string, @Body('status') status: string) {
+    console.log(`Updating appointment ${id} to status ${status}`);
+    return this.clinicalService.updateAppointmentStatus(id, status);
+  }
+
   @Patch('appointments/:id/accept')
   async acceptAppointment(@Param('id') id: string) {
     return this.clinicalService.acceptAppointment(id);
+  }
+
+  @Patch('appointments/:id/reject')
+  async rejectAppointment(@Param('id') id: string) {
+    return this.clinicalService.rejectAppointment(id);
   }
 
   @Get('dashboard/stats')
