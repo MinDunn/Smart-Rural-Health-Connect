@@ -33,7 +33,7 @@ export class ClinicalService {
   }
 
   async createAppointment(data: any): Promise<Appointment> {
-    const appointment = this.appointmentRepository.create(data);
+    const appointment = this.appointmentRepository.create(data as Appointment);
     return this.appointmentRepository.save(appointment);
   }
 
@@ -61,7 +61,7 @@ export class ClinicalService {
     const consultation = this.consultationRepository.create({
       ...data,
       appointment,
-    });
+    } as Consultation);
     const saved = await this.consultationRepository.save(consultation);
     appointment.consultation = saved;
     await this.appointmentRepository.save(appointment);
@@ -73,11 +73,11 @@ export class ClinicalService {
       where: { id: consultationId },
     });
     if (!consultation) throw new NotFoundException('Consultation not found');
-
+  
     const prescription = this.prescriptionRepository.create({
       ...data,
       consultation,
-    });
+    } as Prescription);
     return this.prescriptionRepository.save(prescription);
   }
 
@@ -144,15 +144,15 @@ export class ClinicalService {
       consultation = this.consultationRepository.create({
         appointment,
         ...data
-      });
+      } as Consultation);
     } else {
       Object.assign(consultation, data);
     }
 
-    await this.consultationRepository.save(consultation);
+    const savedConsultation = await this.consultationRepository.save(consultation);
 
     appointment.status = 'completed';
-    appointment.consultation = consultation;
+    appointment.consultation = savedConsultation;
     
     return this.appointmentRepository.save(appointment);
   }

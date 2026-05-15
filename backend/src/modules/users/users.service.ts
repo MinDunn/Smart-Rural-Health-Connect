@@ -1,9 +1,9 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity.js';
-import { Role } from './entities/role.entity.js';
-import { Profile } from './entities/profile.entity.js';
+import { User } from './entities/user.entity';
+import { Role } from './entities/role.entity';
+import { Profile } from './entities/profile.entity';
 
 @Injectable()
 export class UsersService {
@@ -89,13 +89,31 @@ export class UsersService {
   }
 
   async updateProfile(id: string, profileData: any): Promise<User> {
-    const user = await this.findById(id);
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['profile'],
+    });
+    
     if (!user) throw new Error('User not found');
+    
     if (!user.profile) {
-      user.profile = profileData;
+      const newProfile = this.profileRepository.create(profileData as Profile);
+      user.profile = await this.profileRepository.save(newProfile);
     } else {
-      Object.assign(user.profile, profileData);
+      // Filter out fields that might not be in the Profile entity
+      const { email, dob, ...validProfileData } = profileData;
+      Object.assign(user.profile, validProfileData);
+      
+      // Handle Date conversion if dob is provided
+      if (dob) {
+        const date = new Date(dob);
+        if (!isNaN(date.getTime())) {
+          user.profile.dob = date;
+        }
+      }
+      await this.profileRepository.save(user.profile);
     }
+    
     return this.userRepository.save(user);
   }
 

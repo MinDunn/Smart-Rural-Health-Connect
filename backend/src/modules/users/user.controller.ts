@@ -17,6 +17,11 @@ export class UsersController {
 
   @Put(':id/profile')
   async updateProfile(@Param('id') id: string, @Body() data: any) {
-    return this.usersService.updateProfile(id, data);
+    try {
+      return await this.usersService.updateProfile(id, data);
+    } catch (error) {
+      console.error('[UsersController] Error updating profile:', error);
+      throw error;
+    }
   }
 }
